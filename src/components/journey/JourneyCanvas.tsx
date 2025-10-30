@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -15,8 +15,11 @@ import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 import { DetailPanel } from './DetailPanel';
 import { Toolbar } from './Toolbar';
+import { AppSidebar } from './Sidebar';
 import { JourneyNode, NodeShape } from '@/types/journey';
 import { sampleJourneyData } from '@/data/sampleJourney';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { toast } from 'sonner';
 
 const nodeTypes = {
   custom: CustomNode,
@@ -141,41 +144,65 @@ export const JourneyCanvas = () => {
     setNodes((nds) => [...nds, newNode]);
   }, [selectedShape, setNodes]);
 
+  const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
+    const fileNames = Array.from(files).map(f => f.name);
+    toast.success(`${fileNames.length} document(en) geüpload voor node ${nodeId}`);
+    console.log('Uploaded files:', fileNames, 'for node:', nodeId);
+  }, []);
+
+  const handleMenuSelect = useCallback((menuId: string) => {
+    toast.info(`Menu geselecteerd: ${menuId}`);
+  }, []);
+
   return (
-    <div className="relative w-full h-screen flex">
-      <div className="flex-1 relative">
-        <Toolbar
-          onAddNode={handleAddNode}
-          onShapeChange={setSelectedShape}
-          selectedShape={selectedShape}
-        />
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          className="bg-canvas-bg"
-        >
-          <Background color="#cbd5e1" gap={20} />
-          <Controls />
-          <MiniMap
-            nodeColor={(node) => {
-              const data = node.data as { color?: string };
-              return data.color || '#0891B2';
-            }}
-            className="bg-card border border-border"
-          />
-        </ReactFlow>
+    <SidebarProvider>
+      <div className="relative w-full h-screen flex">
+        <AppSidebar onMenuSelect={handleMenuSelect} />
+        
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center gap-2 p-2 border-b border-border">
+            <SidebarTrigger />
+            <h1 className="text-lg font-semibold">Journey Mindmap</h1>
+          </div>
+          
+          <div className="flex-1 relative flex">
+            <div className="flex-1 relative">
+              <Toolbar
+                onAddNode={handleAddNode}
+                onShapeChange={setSelectedShape}
+                selectedShape={selectedShape}
+              />
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                fitView
+                className="bg-canvas-bg"
+              >
+                <Background color="#cbd5e1" gap={20} />
+                <Controls />
+                <MiniMap
+                  nodeColor={(node) => {
+                    const data = node.data as { color?: string };
+                    return data.color || '#0891B2';
+                  }}
+                  className="bg-card border border-border"
+                />
+              </ReactFlow>
+            </div>
+            <DetailPanel
+              node={selectedNode}
+              onClose={handleClosePanel}
+              onChildClick={handleChildClick}
+              breadcrumbs={breadcrumbs}
+              onDocumentUpload={handleDocumentUpload}
+            />
+          </div>
+        </div>
       </div>
-      <DetailPanel
-        node={selectedNode}
-        onClose={handleClosePanel}
-        onChildClick={handleChildClick}
-        breadcrumbs={breadcrumbs}
-      />
-    </div>
+    </SidebarProvider>
   );
 };

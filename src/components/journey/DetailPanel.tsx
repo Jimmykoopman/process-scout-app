@@ -1,18 +1,29 @@
-import { X, ChevronRight, FileText } from 'lucide-react';
+import { X, ChevronRight, FileText, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { JourneyNode } from '@/types/journey';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useRef } from 'react';
 
 interface DetailPanelProps {
   node: JourneyNode | null;
   onClose: () => void;
   onChildClick: (child: JourneyNode) => void;
   breadcrumbs: JourneyNode[];
+  onDocumentUpload?: (nodeId: string, files: FileList) => void;
 }
 
-export const DetailPanel = ({ node, onClose, onChildClick, breadcrumbs }: DetailPanelProps) => {
+export const DetailPanel = ({ node, onClose, onChildClick, breadcrumbs, onDocumentUpload }: DetailPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!node) return null;
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && node) {
+      onDocumentUpload?.(node.id, e.target.files);
+    }
+  };
 
   return (
     <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full">
@@ -69,25 +80,45 @@ export const DetailPanel = ({ node, onClose, onChildClick, breadcrumbs }: Detail
             </Card>
           )}
 
-          {node.documents && node.documents.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Documenten</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {node.documents.map((doc, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="w-full justify-start gap-2 hover:bg-secondary/10"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>{doc}</span>
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Documenten</CardTitle>
+              <CardDescription>Upload documenten voor dit item</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-center gap-2 border-dashed"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-4 h-4" />
+                <span>Upload document</span>
+              </Button>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+              />
+              
+              {node.documents && node.documents.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  {node.documents.map((doc, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="w-full justify-start gap-2 hover:bg-secondary/10"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>{doc}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
     </div>
