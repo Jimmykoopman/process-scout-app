@@ -16,7 +16,8 @@ import CustomNode from './CustomNode';
 import { DetailPanel } from './DetailPanel';
 import { Toolbar } from './Toolbar';
 import { AppSidebar } from './Sidebar';
-import { JourneyNode, NodeShape } from '@/types/journey';
+import { ExpandedNodeView } from './ExpandedNodeView';
+import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink } from '@/types/journey';
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
@@ -29,6 +30,19 @@ export const JourneyCanvas = () => {
   const [selectedNode, setSelectedNode] = useState<JourneyNode | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<JourneyNode[]>([]);
   const [selectedShape, setSelectedShape] = useState<NodeShape>('circle');
+  const [expandedNode, setExpandedNode] = useState<JourneyNode | null>(null);
+  
+  // Workspace management
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([
+    { id: 'default', name: 'Klant Reis', type: 'mindmap', data: sampleJourneyData }
+  ]);
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState('default');
+  
+  // Document management
+  const [documents, setDocuments] = useState<Document[]>([]);
+  
+  // Journey nodes with text styles and links
+  const [journeyData, setJourneyData] = useState(sampleJourneyData);
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -36,7 +50,7 @@ export const JourneyCanvas = () => {
     const xSpacing = 250;
     const ySpacing = 150;
 
-    sampleJourneyData.stages.forEach((stage, index) => {
+    journeyData.stages.forEach((stage, index) => {
       nodes.push({
         id: stage.id,
         type: 'custom',
@@ -45,7 +59,9 @@ export const JourneyCanvas = () => {
           label: stage.label,
           shape: stage.shape,
           color: stage.color,
+          textStyle: stage.textStyle,
           onClick: () => handleNodeClick(stage),
+          onDoubleClick: () => handleNodeDoubleClick(stage),
         },
       });
 
@@ -62,7 +78,9 @@ export const JourneyCanvas = () => {
             data: {
               label: child.label,
               shape: child.shape,
+              textStyle: child.textStyle,
               onClick: () => handleNodeClick(child, [stage]),
+              onDoubleClick: () => handleNodeDoubleClick(child),
             },
           });
         });
@@ -70,19 +88,19 @@ export const JourneyCanvas = () => {
     });
 
     return nodes;
-  }, []);
+  }, [journeyData]);
 
   const createEdgesFromData = useCallback(() => {
     const edges: Edge[] = [];
     let edgeId = 0;
 
-    sampleJourneyData.stages.forEach((stage, index) => {
+    journeyData.stages.forEach((stage, index) => {
       // Connect stages
-      if (index < sampleJourneyData.stages.length - 1) {
+      if (index < journeyData.stages.length - 1) {
         edges.push({
           id: `e${edgeId++}`,
           source: stage.id,
-          target: sampleJourneyData.stages[index + 1].id,
+          target: journeyData.stages[index + 1].id,
           type: 'smoothstep',
           markerEnd: {
             type: MarkerType.ArrowClosed,
@@ -106,7 +124,7 @@ export const JourneyCanvas = () => {
     });
 
     return edges;
-  }, []);
+  }, [journeyData]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(createNodesFromData());
   const [edges, setEdges, onEdgesChange] = useEdgesState(createEdgesFromData());
@@ -114,6 +132,14 @@ export const JourneyCanvas = () => {
   const handleNodeClick = useCallback((node: JourneyNode, parentBreadcrumbs: JourneyNode[] = []) => {
     setSelectedNode(node);
     setBreadcrumbs([...parentBreadcrumbs, node]);
+    setExpandedNode(node);
+  }, []);
+
+  const handleNodeDoubleClick = useCallback((node: JourneyNode) => {
+    // Open first link if available
+    if (node.links && node.links.length > 0) {
+      window.open(node.links[0].url, '_blank');
+    }
   }, []);
 
   const handleChildClick = useCallback((child: JourneyNode) => {
@@ -146,8 +172,107 @@ export const JourneyCanvas = () => {
 
   const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
     const fileNames = Array.from(files).map(f => f.name);
-    toast.success(`${fileNames.length} document(en) geüpload voor node ${nodeId}`);
-    console.log('Uploaded files:', fileNames, 'for node:', nodeId);
+    const nodePath = findNodePath(nodeId, journeyData.stages);
+    
+    const newDocuments: Document[] = fileNames.map((name, index) => ({
+      id: `${nodeId}-doc-${Date.now()}-${index}`,
+      name,
+      nodeId,
+      nodePath,
+      uploadDate: new Date().toISOString(),
+    }));
+    
+    setDocuments(prev => [...prev, ...newDocuments]);
+    toast.success(`${fileNames.length} document(en) geüpload`);
+  }, [journeyData]);
+
+  const findNodePath = (nodeId: string, stages: JourneyNode[], path: string = ''): string => {
+    for (const stage of stages) {
+      const currentPath = path ? `${path} > ${stage.label}` : stage.label;
+      if (stage.id === nodeId) return currentPath;
+      if (stage.children) {
+        const childPath = findNodePath(nodeId, stage.children, currentPath);
+        if (childPath) return childPath;
+      }
+    }
+    return '';
+  };
+
+  const handleTextStyleChange = useCallback((nodeId: string, style: Partial<TextStyle>) => {
+    const updateNodeStyle = (nodes: JourneyNode[]): JourneyNode[] => {
+      return nodes.map(node => {
+        if (node.id === nodeId) {
+          return { ...node, textStyle: { ...node.textStyle, ...style } as TextStyle };
+        }
+        if (node.children) {
+          return { ...node, children: updateNodeStyle(node.children) };
+        }
+        return node;
+      });
+    };
+    
+    setJourneyData(prev => ({ ...prev, stages: updateNodeStyle(prev.stages) }));
+    toast.success('Tekst formatting bijgewerkt');
+  }, []);
+
+  const handleLinkAdd = useCallback((nodeId: string, url: string, label: string) => {
+    const updateNodeLinks = (nodes: JourneyNode[]): JourneyNode[] => {
+      return nodes.map(node => {
+        if (node.id === nodeId) {
+          const newLink: NodeLink = { id: `${nodeId}-link-${Date.now()}`, url, label };
+          return { ...node, links: [...(node.links || []), newLink] };
+        }
+        if (node.children) {
+          return { ...node, children: updateNodeLinks(node.children) };
+        }
+        return node;
+      });
+    };
+    
+    setJourneyData(prev => ({ ...prev, stages: updateNodeLinks(prev.stages) }));
+    toast.success('Link toegevoegd');
+  }, []);
+
+  const handleLinkRemove = useCallback((nodeId: string, linkId: string) => {
+    const updateNodeLinks = (nodes: JourneyNode[]): JourneyNode[] => {
+      return nodes.map(node => {
+        if (node.id === nodeId) {
+          return { ...node, links: node.links?.filter(l => l.id !== linkId) };
+        }
+        if (node.children) {
+          return { ...node, children: updateNodeLinks(node.children) };
+        }
+        return node;
+      });
+    };
+    
+    setJourneyData(prev => ({ ...prev, stages: updateNodeLinks(prev.stages) }));
+    toast.success('Link verwijderd');
+  }, []);
+
+  const handleAddWorkspace = useCallback((name: string, type: WorkspaceType) => {
+    const newWorkspace: Workspace = {
+      id: `workspace-${Date.now()}`,
+      name,
+      type,
+      data: { stages: [] },
+    };
+    setWorkspaces(prev => [...prev, newWorkspace]);
+    setCurrentWorkspaceId(newWorkspace.id);
+    toast.success(`Workspace "${name}" aangemaakt`);
+  }, []);
+
+  const handleWorkspaceChange = useCallback((workspaceId: string) => {
+    setCurrentWorkspaceId(workspaceId);
+    const workspace = workspaces.find(w => w.id === workspaceId);
+    if (workspace) {
+      setJourneyData(workspace.data);
+      toast.info(`Workspace "${workspace.name}" geladen`);
+    }
+  }, [workspaces]);
+
+  const handleDocumentClick = useCallback((doc: Document) => {
+    toast.info(`Document: ${doc.name} - Node: ${doc.nodePath}`);
   }, []);
 
   const handleMenuSelect = useCallback((menuId: string) => {
@@ -157,7 +282,15 @@ export const JourneyCanvas = () => {
   return (
     <SidebarProvider>
       <div className="relative w-full h-screen flex">
-        <AppSidebar onMenuSelect={handleMenuSelect} />
+        <AppSidebar 
+          onMenuSelect={handleMenuSelect}
+          workspaces={workspaces}
+          currentWorkspaceId={currentWorkspaceId}
+          onWorkspaceChange={handleWorkspaceChange}
+          onAddWorkspace={handleAddWorkspace}
+          documents={documents}
+          onDocumentClick={handleDocumentClick}
+        />
         
         <div className="flex-1 flex flex-col">
           <div className="flex items-center gap-2 p-2 border-b border-border">
@@ -199,9 +332,18 @@ export const JourneyCanvas = () => {
               onChildClick={handleChildClick}
               breadcrumbs={breadcrumbs}
               onDocumentUpload={handleDocumentUpload}
+              onTextStyleChange={handleTextStyleChange}
+              onLinkAdd={handleLinkAdd}
+              onLinkRemove={handleLinkRemove}
             />
           </div>
         </div>
+
+        <ExpandedNodeView
+          node={expandedNode}
+          open={expandedNode !== null}
+          onClose={() => setExpandedNode(null)}
+        />
       </div>
     </SidebarProvider>
   );
