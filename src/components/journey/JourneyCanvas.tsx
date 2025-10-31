@@ -371,11 +371,21 @@ export const JourneyCanvas = () => {
       return newNode;
     };
 
-    // Create edge between nodes
+    // Create edge between nodes with correct handles based on direction
+    const handleMap = {
+      'top': { sourceHandle: 'top', targetHandle: 'bottom' },
+      'bottom': { sourceHandle: 'bottom', targetHandle: 'top' },
+      'left': { sourceHandle: 'left', targetHandle: 'right' },
+      'right': { sourceHandle: 'right', targetHandle: 'left' },
+    };
+    
+    const handles = handleMap[direction];
     const newEdge: Edge = {
       id: `e${sourceNodeId}-${newJourneyNode.id}`,
       source: sourceNodeId,
       target: newJourneyNode.id,
+      sourceHandle: handles.sourceHandle,
+      targetHandle: handles.targetHandle,
       type: 'smoothstep',
       markerEnd: {
         type: MarkerType.ArrowClosed,
