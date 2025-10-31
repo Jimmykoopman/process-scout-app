@@ -25,11 +25,25 @@ export interface JourneyNode {
   links?: NodeLink[];
 }
 
+export interface WorkspacePage {
+  id: string;
+  title: string;
+  icon?: string;
+  workspaceId: string;
+  children?: WorkspacePage[];
+  type?: 'page' | 'database' | 'board' | 'calendar' | 'list';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;
   type: WorkspaceType;
   data: JourneyData;
+  icon?: string;
+  pages?: WorkspacePage[];
+  isExpanded?: boolean;
 }
 
 export interface JourneyData {
