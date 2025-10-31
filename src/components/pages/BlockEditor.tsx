@@ -52,8 +52,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
           value={block.content}
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Heading 1"
-          className="text-3xl font-bold border-0 focus-visible:ring-0 p-2 resize-none"
-          rows={1}
+          className="text-3xl font-bold border-0 focus-visible:ring-0 p-2 min-h-[auto]"
         />
       );
 
@@ -63,8 +62,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
           value={block.content}
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Heading 2"
-          className="text-2xl font-bold border-0 focus-visible:ring-0 p-2 resize-none"
-          rows={1}
+          className="text-2xl font-bold border-0 focus-visible:ring-0 p-2 min-h-[auto]"
         />
       );
 
@@ -74,8 +72,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
           value={block.content}
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Heading 3"
-          className="text-xl font-bold border-0 focus-visible:ring-0 p-2 resize-none"
-          rows={1}
+          className="text-xl font-bold border-0 focus-visible:ring-0 p-2 min-h-[auto]"
         />
       );
 
@@ -91,10 +88,9 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
             value={block.content}
             onChange={(e) => handleContentChange(e.target.value)}
             placeholder="To-do"
-            className={`flex-1 border-0 focus-visible:ring-0 resize-none ${
+            className={`flex-1 border-0 focus-visible:ring-0 min-h-[auto] ${
               block.checked ? 'line-through text-muted-foreground' : ''
             }`}
-            rows={1}
           />
         </div>
       );
@@ -105,8 +101,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
           value={block.content}
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="// Code hier..."
-          className="font-mono bg-muted border-0 focus-visible:ring-0 p-4 resize-none"
-          rows={4}
+          className="font-mono bg-muted border-0 focus-visible:ring-0 p-4"
         />
       );
 
@@ -117,8 +112,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
             value={block.content}
             onChange={(e) => handleContentChange(e.target.value)}
             placeholder="Quote..."
-            className="italic border-0 focus-visible:ring-0 resize-none"
-            rows={2}
+            className="italic border-0 focus-visible:ring-0"
           />
         </div>
       );
@@ -176,8 +170,7 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
               value={block.content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="Typ iets..."
-              className="border-0 focus-visible:ring-0 p-2 resize-none flex-1"
-              rows={2}
+              className="border-0 focus-visible:ring-0 p-2 flex-1 min-h-[auto]"
             />
           </div>
         </div>
