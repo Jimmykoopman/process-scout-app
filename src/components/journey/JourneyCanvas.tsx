@@ -24,6 +24,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
 import { PageManager } from '@/components/pages/PageManager';
 import { DocumentLibrary } from './DocumentLibrary';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const nodeTypes = {
@@ -55,6 +56,8 @@ export const JourneyCanvas = () => {
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
   const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState('');
 
   // Get current page data
   const getCurrentPageKey = () => {
@@ -814,10 +817,47 @@ export const JourneyCanvas = () => {
         <div className="flex-1 flex flex-col">
           <div className="flex items-center gap-2 p-2 border-b border-border">
             <SidebarTrigger />
-            <h1 className="text-lg font-semibold">
-              {selectedPage
-                ? selectedPage.title
-                : currentView === 'home'
+            {selectedPage ? (
+              editingTitle ? (
+                <Input
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onBlur={() => {
+                    if (titleValue.trim()) {
+                      if (selectedPage.workspaceId) {
+                        handleRenameWorkspacePage(selectedPage.workspaceId, selectedPage.id, titleValue.trim());
+                      } else {
+                        handleRenamePrivatePage(selectedPage.id, titleValue.trim());
+                      }
+                    }
+                    setEditingTitle(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.currentTarget.blur();
+                    }
+                    if (e.key === 'Escape') {
+                      setTitleValue(selectedPage.title);
+                      setEditingTitle(false);
+                    }
+                  }}
+                  className="text-lg font-semibold border-0 px-2 py-0 h-8 focus-visible:ring-1"
+                  autoFocus
+                />
+              ) : (
+                <h1 
+                  className="text-lg font-semibold cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                  onClick={() => {
+                    setTitleValue(selectedPage.title);
+                    setEditingTitle(true);
+                  }}
+                >
+                  {selectedPage.title}
+                </h1>
+              )
+            ) : (
+              <h1 className="text-lg font-semibold px-2">
+                {currentView === 'home'
                   ? 'Startpagina'
                   : currentView === 'inbox'
                     ? 'Inbox'
@@ -831,8 +871,9 @@ export const JourneyCanvas = () => {
                               const ws = workspaces.find(w => w.id === currentWorkspaceId);
                               return ws ? `${ws.name} Home` : 'Workspace';
                             })()
-              }
-            </h1>
+                }
+              </h1>
+            )}
           </div>
           
           <div className="flex-1 relative flex flex-col">
