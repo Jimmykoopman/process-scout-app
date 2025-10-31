@@ -43,12 +43,12 @@ interface AppSidebarProps {
   workspacePages: Record<string, WorkspacePage[]>;
   onDeleteWorkspacePage: (workspaceId: string, pageId: string) => void;
   onRenameWorkspacePage: (workspaceId: string, pageId: string, newTitle: string) => void;
-  onAddPageToWorkspace: (workspaceId: string, pageType: PageType) => void;
+  onAddPageToWorkspace: (workspaceId: string, pageType: PageType, parentId?: string) => void;
   privatePages: Page[];
-  onAddPrivatePage: (pageType: PageType) => void;
+  onAddPrivatePage: (pageType: PageType, parentId?: string) => void;
   onDeletePrivatePage: (pageId: string) => void;
   onRenamePrivatePage: (pageId: string, newTitle: string) => void;
-  onShowTemplateSelector: (target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => void;
+  onShowTemplateSelector: (target: { type: 'private', parentId?: string } | { type: 'workspace', workspaceId: string, parentId?: string }) => void;
   activePageId?: string;
 }
 
@@ -88,6 +88,7 @@ export function AppSidebar({
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({});
+  const [expandedPages, setExpandedPages] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState({
     private: true,
     teams: true,
@@ -170,6 +171,13 @@ export function AppSidebar({
     onAddPageToWorkspace(workspaceId, pageType);
   };
 
+  const togglePage = (pageId: string) => {
+    setExpandedPages(prev => ({
+      ...prev,
+      [pageId]: !prev[pageId]
+    }));
+  };
+
   const getPageIcon = (type: PageType) => {
     switch (type) {
       case 'database': return Database;
@@ -178,6 +186,254 @@ export function AppSidebar({
       case 'form': return FileEdit;
       default: return FileText;
     }
+  };
+
+  // Recursive function to render private pages with children
+  const renderPrivatePage = (page: Page, depth: number = 0): React.ReactNode => {
+    const PageIcon = getPageIcon(page.type as PageType);
+    const hasChildren = page.children && page.children.length > 0;
+    
+    return (
+      <div key={page.id}>
+        <SidebarMenuItem>
+          <div className="group flex items-center w-full">
+            {hasChildren && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={() => togglePage(page.id)}
+              >
+                {expandedPages[page.id] ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+            {renamingItem?.type === 'private' && renamingItem.id === page.id ? (
+              <div className="flex items-center gap-1 flex-1" style={{ marginLeft: !hasChildren ? '28px' : '0' }}>
+                <Input
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRename();
+                    if (e.key === 'Escape') handleCancelRename();
+                  }}
+                  className="h-7 text-sm"
+                  autoFocus
+                />
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    setSelectedView(page.id);
+                    onMenuSelect(page.id, page as any);
+                  }}
+                  isActive={selectedView === page.id}
+                  className={`flex-1 ${
+                    selectedView === page.id 
+                      ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                      : ''
+                  }`}
+                  style={{ marginLeft: !hasChildren ? '28px' : '0' }}
+                >
+                  <PageIcon className="h-4 w-4" />
+                  <span>{page.title}</span>
+                </SidebarMenuButton>
+                <div className="flex items-center gap-0.5">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                      <DropdownMenuItem>
+                        <Star className="h-4 w-4 mr-2" />
+                        Toevoegen aan favorieten
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStartRename('private', page.id, page.title)}>
+                        <FileEdit className="h-4 w-4 mr-2" />
+                        Naam wijzigen
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Dupliceren
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Openen in nieuw tablad
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onDeletePrivatePage(page.id)}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Verplaatsen naar prullenbak
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onShowTemplateSelector({ type: 'private', parentId: page.id })}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Een subpagina toevoegen
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShowTemplateSelector({ type: 'private', parentId: page.id });
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SidebarMenuItem>
+        {hasChildren && expandedPages[page.id] && (
+          <div className="ml-4">
+            {page.children!.map(child => renderPrivatePage(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Recursive function to render workspace pages with children
+  const renderWorkspacePage = (page: WorkspacePage, workspaceId: string, depth: number = 0): React.ReactNode => {
+    const hasChildren = page.children && page.children.length > 0;
+    
+    return (
+      <div key={page.id}>
+        <SidebarMenuSubItem>
+          <div className="group/page flex items-center w-full">
+            {hasChildren && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 shrink-0"
+                onClick={() => togglePage(page.id)}
+              >
+                {expandedPages[page.id] ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+            {renamingItem?.type === 'page' && renamingItem.id === page.id ? (
+              <div className="flex items-center gap-1 flex-1" style={{ marginLeft: !hasChildren ? '20px' : '0' }}>
+                <Input
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRename();
+                    if (e.key === 'Escape') handleCancelRename();
+                  }}
+                  className="h-6 text-xs"
+                  autoFocus
+                />
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleSaveRename}>
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleCancelRename}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <SidebarMenuSubButton
+                  onClick={() => {
+                    setSelectedView(page.id);
+                    onMenuSelect(page.id, page);
+                  }}
+                  isActive={selectedView === page.id}
+                  className={`flex-1 ${
+                    selectedView === page.id 
+                      ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                      : ''
+                  }`}
+                  style={{ marginLeft: !hasChildren ? '20px' : '0' }}
+                >
+                  <FileText className="h-3 w-3" />
+                  <span className="text-xs">{page.title}</span>
+                </SidebarMenuSubButton>
+                <div className="flex items-center gap-0.5">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                      <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
+                        <Star className="h-4 w-4 mr-2" />
+                        Toevoegen aan Favorieten
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Link kopiëren
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Dupliceren
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStartRename('page', page.id, page.title, workspaceId)}>
+                        <FileEdit className="h-4 w-4 mr-2" />
+                        Naam wijzigen
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onDeleteWorkspacePage(workspaceId, page.id)}>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Verplaatsen naar prullenbak
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onShowTemplateSelector({ type: 'workspace', workspaceId, parentId: page.id })}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Een subpagina toevoegen
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShowTemplateSelector({ type: 'workspace', workspaceId, parentId: page.id });
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SidebarMenuSubItem>
+        {hasChildren && expandedPages[page.id] && (
+          <div className="ml-4">
+            {page.children!.map(child => renderWorkspacePage(child, workspaceId, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -276,105 +532,9 @@ export function AppSidebar({
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {privatePages.map((page) => {
-                    const PageIcon = getPageIcon(page.type as PageType);
-                    return (
-                      <SidebarMenuItem key={page.id}>
-                        <div className="group flex items-center">
-                          {renamingItem?.type === 'private' && renamingItem.id === page.id ? (
-                            <div className="flex items-center gap-1 flex-1">
-                              <Input
-                                value={renameValue}
-                                onChange={(e) => setRenameValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveRename();
-                                  if (e.key === 'Escape') handleCancelRename();
-                                }}
-                                className="h-7 text-sm"
-                                autoFocus
-                              />
-                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
-                                <Check className="h-3 w-3" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <SidebarMenuButton 
-                                onClick={() => {
-                                  setSelectedView(page.id);
-                                  onMenuSelect(page.id, page as any);
-                                }}
-                                isActive={selectedView === page.id}
-                                className={`flex-1 ${
-                                  selectedView === page.id 
-                                    ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
-                                    : ''
-                                }`}
-                              >
-                                <PageIcon className="h-4 w-4" />
-                                <span>{page.title}</span>
-                              </SidebarMenuButton>
-                              <div className="flex items-center gap-0.5">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                                    <DropdownMenuItem>
-                                      <Star className="h-4 w-4 mr-2" />
-                                      Toevoegen aan favorieten
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStartRename('private', page.id, page.title)}>
-                                      <FileEdit className="h-4 w-4 mr-2" />
-                                      Naam wijzigen
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                      <Copy className="h-4 w-4 mr-2" />
-                                      Dupliceren
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <ExternalLink className="h-4 w-4 mr-2" />
-                                      Openen in nieuw tablad
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => onDeletePrivatePage(page.id)}>
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Verplaatsen naar prullenbak
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <Plus className="h-4 w-4 mr-2" />
-                                      Een subpagina toevoegen
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onShowTemplateSelector({ type: 'private' });
-                                  }}
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </SidebarMenuItem>
-                    );
-                  })}
+                  {privatePages
+                    .filter(page => !page.parentId) // Only show top-level pages
+                    .map((page) => renderPrivatePage(page))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -550,101 +710,9 @@ export function AppSidebar({
 
                             <CollapsibleContent className="ml-4">
                               <SidebarMenuSub>
-                                {(workspacePages[workspace.id] || []).map((page) => (
-                                  <SidebarMenuSubItem key={page.id}>
-                                    <div className="group/page flex items-center w-full">
-                                      {renamingItem?.type === 'page' && renamingItem.id === page.id ? (
-                                        <div className="flex items-center gap-1 flex-1 pl-2">
-                                          <Input
-                                            value={renameValue}
-                                            onChange={(e) => setRenameValue(e.target.value)}
-                                            onKeyDown={(e) => {
-                                              if (e.key === 'Enter') handleSaveRename();
-                                              if (e.key === 'Escape') handleCancelRename();
-                                            }}
-                                            className="h-6 text-xs"
-                                            autoFocus
-                                          />
-                                          <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleSaveRename}>
-                                            <Check className="h-3 w-3" />
-                                          </Button>
-                                          <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleCancelRename}>
-                                            <X className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      ) : (
-                                        <>
-                                          <SidebarMenuSubButton
-                                            onClick={() => {
-                                              setSelectedView(page.id);
-                                              onMenuSelect(page.id, page);
-                                            }}
-                                            isActive={selectedView === page.id}
-                                            className={`flex-1 ${
-                                              selectedView === page.id 
-                                                ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
-                                                : ''
-                                            }`}
-                                          >
-                                            <FileText className="h-3 w-3" />
-                                            <span className="text-xs">{page.title}</span>
-                                          </SidebarMenuSubButton>
-                                          <div className="flex items-center gap-0.5">
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
-                                                >
-                                                  <MoreHorizontal className="h-3 w-3" />
-                                                </Button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                                                <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
-                                                  <Star className="h-4 w-4 mr-2" />
-                                                  Toevoegen aan Favorieten
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem>
-                                                  <Link2 className="h-4 w-4 mr-2" />
-                                                  Link kopiëren
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem>
-                                                  <Copy className="h-4 w-4 mr-2" />
-                                                  Dupliceren
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleStartRename('page', page.id, page.title, workspace.id)}>
-                                                  <FileEdit className="h-4 w-4 mr-2" />
-                                                  Naam wijzigen
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem onClick={() => onDeleteWorkspacePage(workspace.id, page.id)}>
-                                                  <Trash2 className="h-4 w-4 mr-2" />
-                                                  Verplaatsen naar prullenbak
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem>
-                                                  <Plus className="h-4 w-4 mr-2" />
-                                                  Een subpagina toevoegen
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
-                                              }}
-                                            >
-                                              <Plus className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  </SidebarMenuSubItem>
-                                ))}
+                                {(workspacePages[workspace.id] || [])
+                                  .filter(page => !page.parentId) // Only show top-level pages
+                                  .map((page) => renderWorkspacePage(page, workspace.id))}
                               </SidebarMenuSub>
                             </CollapsibleContent>
                           </Collapsible>

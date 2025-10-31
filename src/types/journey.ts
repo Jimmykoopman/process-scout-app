@@ -33,6 +33,7 @@ export interface WorkspacePage {
   icon?: string;
   workspaceId: string;
   children?: WorkspacePage[];
+  parentId?: string;
   type: PageType;
   content?: any;
   createdAt: string;
@@ -117,6 +118,7 @@ export interface Page {
   type?: PageType;
   blocks: Block[];
   parentId?: string;
+  children?: Page[];
   createdAt: string;
   updatedAt: string;
   isFavorite?: boolean;
