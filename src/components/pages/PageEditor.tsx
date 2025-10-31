@@ -50,6 +50,27 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
     });
   };
 
+  const handleAddBlockAfter = (type: BlockType, afterBlockId: string) => {
+    const newBlock: Block = {
+      id: `block-${Date.now()}`,
+      type,
+      content: '',
+      checked: type === 'todo' ? false : undefined,
+      mindmapData: type === 'mindmap' ? { stages: [] } : undefined,
+    };
+
+    const afterIndex = page.blocks.findIndex(b => b.id === afterBlockId);
+    const newBlocks = [...page.blocks];
+    newBlocks.splice(afterIndex + 1, 0, newBlock);
+
+    onPageChange({
+      ...page,
+      blocks: newBlocks,
+      updatedAt: new Date().toISOString(),
+    });
+    toast.success('Block toegevoegd');
+  };
+
   const handleDeleteBlock = (blockId: string) => {
     onPageChange({
       ...page,
@@ -116,6 +137,7 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
                 <BlockEditor
                   block={block}
                   onChange={(updates) => handleBlockChange(block.id, updates)}
+                  onAddBlock={handleAddBlockAfter}
                 />
               </div>
             ))}
