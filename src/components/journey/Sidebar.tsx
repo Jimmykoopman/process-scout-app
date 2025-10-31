@@ -265,7 +265,11 @@ export function AppSidebar({
                                   onMenuSelect(page.id, page as any);
                                 }}
                                 isActive={selectedView === page.id}
-                                className="flex-1"
+                                className={`flex-1 ${
+                                  selectedView === page.id 
+                                    ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                                    : ''
+                                }`}
                               >
                                 <PageIcon className="h-4 w-4" />
                                 <span>{page.title}</span>
@@ -365,17 +369,21 @@ export function AppSidebar({
                                   </Button>
                                 </div>
                               ) : (
-                                <SidebarMenuButton
-                                  onClick={() => {
-                                    onWorkspaceChange(workspace.id);
-                                    handleMenuClick('workspace-' + workspace.id);
-                                  }}
-                                  isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
-                                  className="flex-1"
-                                >
-                                  <Home className="h-4 w-4" />
-                                  <span>{workspace.name}</span>
-                                </SidebarMenuButton>
+                              <SidebarMenuButton
+                                onClick={() => {
+                                  onWorkspaceChange(workspace.id);
+                                  handleMenuClick('workspace-' + workspace.id);
+                                }}
+                                isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
+                                className={`flex-1 ${
+                                  currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id 
+                                    ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                                    : ''
+                                }`}
+                              >
+                                <Home className="h-4 w-4" />
+                                <span>{workspace.name}</span>
+                              </SidebarMenuButton>
                               )}
                             </div>
 
@@ -406,9 +414,16 @@ export function AppSidebar({
                                       ) : (
                                         <>
                                           <SidebarMenuSubButton
-                                            onClick={() => onMenuSelect(page.id, page)}
+                                            onClick={() => {
+                                              setSelectedView(page.id);
+                                              onMenuSelect(page.id, page);
+                                            }}
                                             isActive={selectedView === page.id}
-                                            className="flex-1"
+                                            className={`flex-1 ${
+                                              selectedView === page.id 
+                                                ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                                                : ''
+                                            }`}
                                           >
                                             <FileText className="h-3 w-3" />
                                             <span className="text-xs">{page.title}</span>
