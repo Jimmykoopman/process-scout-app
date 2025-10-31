@@ -782,17 +782,33 @@ export const JourneyCanvas = () => {
   }, [selectedPage]);
 
   const handleShowTemplateSelector = useCallback((target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => {
-    // Instead of showing template selector, directly create a canvas document
+    // Directly create a canvas for both private and workspace
     if (target.type === 'private') {
-      handleAddPrivatePage('document');
-    } else {
-      const typeNames = {
-        mindmap: 'Mindmap',
-        document: 'Canvas',
-        database: 'Database',
-        form: 'Formulier'
+      const newPage: Page = {
+        id: `private-${Date.now()}`,
+        title: 'Nieuwe Canvas',
+        type: 'document',
+        icon: '📄',
+        blocks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-
+      
+      // Initialize empty data for the new page
+      setPageData(prev => ({
+        ...prev,
+        [newPage.id]: { blocks: [] }
+      }));
+      
+      setPages(prev => [...prev, newPage]);
+      setSelectedPage(newPage as any);
+      setCurrentView('workspace-page');
+      
+      // Notify sidebar to select this page
+      handleMenuSelect(newPage.id, newPage as any);
+      
+      toast.success('Canvas aangemaakt in Privé');
+    } else {
       const newPage: WorkspacePage = {
         id: `page-${Date.now()}`,
         title: 'Nieuwe Canvas',
@@ -822,7 +838,7 @@ export const JourneyCanvas = () => {
       
       toast.success('Canvas aangemaakt in teamruimte');
     }
-  }, [handleAddPrivatePage, handleMenuSelect]);
+  }, [handleMenuSelect]);
 
   const handleTemplateSelected = useCallback((type: PageType) => {
     if (!templateSelectorTarget) return;
