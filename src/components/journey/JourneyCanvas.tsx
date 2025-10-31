@@ -18,7 +18,7 @@ import { Toolbar } from './Toolbar';
 import { AppSidebar } from './Sidebar';
 import { ExpandedNodeView } from './ExpandedNodeView';
 import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink, WorkspacePage, Page, PageType } from '@/types/journey';
-import { DocumentEditor } from '@/components/pages/DocumentEditor';
+import { PageEditor } from '@/components/pages/PageEditor';
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
@@ -369,7 +369,7 @@ export const JourneyCanvas = () => {
     // Initialize empty data for the new page
     setPageData(prev => ({
       ...prev,
-      [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? '' : {})
+      [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? { blocks: [] } : {})
     }));
     
     setPages(prev => [...prev, newPage as any]);
@@ -466,10 +466,25 @@ export const JourneyCanvas = () => {
                       </div>
                     </>
                   ) : selectedPage.type === 'document' ? (
-                    <DocumentEditor 
-                      content={pageData[selectedPage.id] || ''}
-                      onChange={(content) => handlePageUpdate(selectedPage.id, content)}
-                    />
+                    <div className="flex-1 overflow-auto bg-background">
+                      <PageEditor
+                        page={{
+                          id: selectedPage.id,
+                          title: selectedPage.title,
+                          icon: selectedPage.icon,
+                          blocks: pageData[selectedPage.id]?.blocks || [],
+                          createdAt: selectedPage.createdAt,
+                          updatedAt: selectedPage.updatedAt
+                        }}
+                        onPageChange={(updatedPage) => {
+                          setPageData(prev => ({
+                            ...prev,
+                            [selectedPage.id]: updatedPage
+                          }));
+                          handlePageUpdate(selectedPage.id, updatedPage);
+                        }}
+                      />
+                    </div>
                   ) : selectedPage.type === 'database' ? (
                     <DatabaseManager />
                   ) : (

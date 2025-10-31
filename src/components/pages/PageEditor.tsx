@@ -113,6 +113,7 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
             <SelectItem value="code">Code</SelectItem>
             <SelectItem value="quote">Quote</SelectItem>
             <SelectItem value="divider">Divider</SelectItem>
+            <SelectItem value="database">Database</SelectItem>
           </SelectContent>
         </Select>
       </div>

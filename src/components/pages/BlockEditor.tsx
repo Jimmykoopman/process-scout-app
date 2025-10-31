@@ -2,6 +2,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Block } from '@/types/journey';
 import { Separator } from '@/components/ui/separator';
+import { DatabaseManager } from '@/components/database/DatabaseManager';
 
 interface BlockEditorProps {
   block: Block;
@@ -93,6 +94,13 @@ export const BlockEditor = ({ block, onChange }: BlockEditorProps) => {
 
     case 'divider':
       return <Separator className="my-4" />;
+
+    case 'database':
+      return (
+        <div className="border rounded-lg p-4 my-4">
+          <DatabaseManager />
+        </div>
+      );
 
     case 'text':
     default:
