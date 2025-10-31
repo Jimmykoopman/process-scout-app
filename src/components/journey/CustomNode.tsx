@@ -62,10 +62,10 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
         handleClassName="!hidden"
       />
       
-      <Handle id="top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
-      <Handle id="bottom" type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
-      <Handle id="left" type="target" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
-      <Handle id="right" type="target" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
+      <Handle id="t-top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
+      <Handle id="t-bottom" type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
+      <Handle id="t-left" type="target" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
+      <Handle id="t-right" type="target" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
       
       {/* Direction arrows - only visible on hover */}
       <button
@@ -112,10 +112,10 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
         <span className={labelClasses} style={labelStyle}>{label}</span>
       </div>
       
-      <Handle id="top" type="source" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
-      <Handle id="bottom" type="source" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
-      <Handle id="left" type="source" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
-      <Handle id="right" type="source" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
+      <Handle id="s-top" type="source" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
+      <Handle id="s-bottom" type="source" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
+      <Handle id="s-left" type="source" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
+      <Handle id="s-right" type="source" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
     </div>
   );
 });

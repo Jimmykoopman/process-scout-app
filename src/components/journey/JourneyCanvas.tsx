@@ -373,11 +373,11 @@ export const JourneyCanvas = () => {
 
     // Create edge between nodes with correct handles based on direction
     const handleMap = {
-      'top': { sourceHandle: 'top', targetHandle: 'bottom' },
-      'bottom': { sourceHandle: 'bottom', targetHandle: 'top' },
-      'left': { sourceHandle: 'left', targetHandle: 'right' },
-      'right': { sourceHandle: 'right', targetHandle: 'left' },
-    };
+      'top': { sourceHandle: 's-top', targetHandle: 't-bottom' },
+      'bottom': { sourceHandle: 's-bottom', targetHandle: 't-top' },
+      'left': { sourceHandle: 's-left', targetHandle: 't-right' },
+      'right': { sourceHandle: 's-right', targetHandle: 't-left' },
+    } as const;
     
     const handles = handleMap[direction];
     const newEdge: Edge = {
