@@ -636,13 +636,12 @@ export const JourneyCanvas = () => {
       [newPage.id]: pageType === 'mindmap' ? { stages: [] } : (pageType === 'document' ? { blocks: [] } : {})
     }));
     
-    // Add to workspace pages
+    // Add to workspace pages ONLY
     setWorkspacePages(prev => ({
       ...prev,
       [workspaceId]: [...(prev[workspaceId] || []), newPage]
     }));
     
-    setPages(prev => [...prev, newPage as any]);
     setSelectedPage(newPage);
     setCurrentView('workspace-page');
     toast.success(`${typeNames[pageType]} aangemaakt`);
@@ -664,7 +663,7 @@ export const JourneyCanvas = () => {
     toast.info(`Document: ${doc.name} - Node: ${doc.nodePath}`);
   }, []);
 
-  const handleMenuSelect = useCallback((menuId: string, pageData?: WorkspacePage) => {
+  const handleMenuSelect = useCallback((menuId: string, pageData?: WorkspacePage | Page) => {
     if (menuId === 'home') {
       setCurrentView('home');
       setSelectedPage(null);
@@ -687,26 +686,46 @@ export const JourneyCanvas = () => {
       // Workspace home clicked
       setCurrentView('workspace-page');
       setSelectedPage(null);
+    } else if (menuId.startsWith('private-')) {
+      // Private page clicked
+      const privatePage = pages.find(p => p.id === menuId);
+      if (privatePage) {
+        setSelectedPage(privatePage as any);
+        setCurrentView('workspace-page');
+      }
     } else if (menuId.startsWith('page-') || pageData) {
       // Handle workspace page selection
       setCurrentView('workspace-page');
       if (pageData) {
-        setSelectedPage(pageData);
+        setSelectedPage(pageData as any);
       }
     } else {
       setCurrentView('home');
       setSelectedPage(null);
     }
-  }, []);
+  }, [pages]);
 
   const handlePageUpdate = useCallback((pageId: string, content: any) => {
     setPageData(prev => ({
       ...prev,
       [pageId]: content
     }));
+    
+    // Update private pages
     setPages(prev => prev.map(p => 
       p.id === pageId ? { ...p, updatedAt: new Date().toISOString() } : p
     ));
+    
+    // Update workspace pages
+    setWorkspacePages(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(workspaceId => {
+        updated[workspaceId] = updated[workspaceId].map(p =>
+          p.id === pageId ? { ...p, updatedAt: new Date().toISOString() } : p
+        );
+      });
+      return updated;
+    });
   }, []);
 
   const handleAddPrivatePage = useCallback((pageType: PageType) => {
@@ -796,13 +815,12 @@ export const JourneyCanvas = () => {
         [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? { blocks: [] } : {})
       }));
       
-      // Add to workspace pages
+      // Add to workspace pages ONLY
       setWorkspacePages(prev => ({
         ...prev,
         [templateSelectorTarget.workspaceId]: [...(prev[templateSelectorTarget.workspaceId] || []), newPage]
       }));
       
-      setPages(prev => [...prev, newPage as any]);
       setSelectedPage(newPage);
       setCurrentView('workspace-page');
       toast.success(`${typeNames[type]} aangemaakt in teamruimte`);

@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface AppSidebarProps {
-  onMenuSelect: (menuId: string, pageData?: WorkspacePage) => void;
+  onMenuSelect: (menuId: string, pageData?: WorkspacePage | Page) => void;
   workspaces: Workspace[];
   currentWorkspaceId: string;
   onWorkspaceChange: (workspaceId: string) => void;
