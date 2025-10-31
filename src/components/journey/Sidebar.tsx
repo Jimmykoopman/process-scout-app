@@ -69,6 +69,13 @@ export function AppSidebar({
     id: string;
     subItems?: Array<{ title: string; id: string }>;
   }>>([]);
+  const [teamItems, setTeamItems] = useState<Array<{
+    title: string;
+    icon: any;
+    id: string;
+    workspaceId: string;
+    subItems?: Array<{ title: string; id: string }>;
+  }>>([]);
   const [openSections, setOpenSections] = useState({
     private: true,
     teams: true,
@@ -102,6 +109,20 @@ export function AppSidebar({
   const handleAddToFavorites = (id: string) => {
     // Placeholder for favorite functionality
     console.log('Add to favorites:', id);
+  };
+
+  const handleAddTeamTemplate = (templateType: typeof templateTypes[0]) => {
+    const newItem = {
+      ...templateType,
+      id: `${templateType.id}-${Date.now()}`,
+      title: templateType.title,
+      workspaceId: currentWorkspaceId,
+    };
+    setTeamItems([...teamItems, newItem]);
+  };
+
+  const handleDeleteTeamItem = (id: string) => {
+    setTeamItems(teamItems.filter(item => item.id !== id));
   };
 
   return (
@@ -305,13 +326,46 @@ export function AppSidebar({
         <Collapsible open={openSections.teams} onOpenChange={() => toggleSection('teams')}>
           <SidebarGroup>
             <CollapsibleTrigger className="w-full">
-              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1">
-                <span className="text-xs font-medium text-muted-foreground">Teamruimten</span>
-                {openSections.teams ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
+              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1 group">
+                <div className="flex items-center gap-2">
+                  {openSections.teams ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                  <span className="text-xs font-medium text-muted-foreground">Teamruimten</span>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {templateTypes.map((template) => (
+                        <DropdownMenuItem
+                          key={template.id}
+                          onClick={() => handleAddTeamTemplate(template)}
+                        >
+                          <template.icon className="h-4 w-4 mr-2" />
+                          {template.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddTeamTemplate(templateTypes[0]);
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </SidebarGroupLabel>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -319,18 +373,172 @@ export function AppSidebar({
                 <SidebarMenu>
                   {workspaces.map((workspace) => (
                     <SidebarMenuItem key={workspace.id}>
-                      <SidebarMenuButton 
-                        onClick={() => {
-                          onWorkspaceChange(workspace.id);
-                          handleMenuClick('workspace-' + workspace.id);
-                        }}
-                        isActive={currentWorkspaceId === workspace.id}
-                      >
-                        <Home className="h-4 w-4" />
-                        <span>{workspace.name}</span>
-                      </SidebarMenuButton>
+                      <div className="group flex items-center">
+                        <SidebarMenuButton 
+                          onClick={() => {
+                            onWorkspaceChange(workspace.id);
+                            handleMenuClick('workspace-' + workspace.id);
+                          }}
+                          isActive={currentWorkspaceId === workspace.id}
+                          className="flex-1"
+                        >
+                          <Home className="h-4 w-4" />
+                          <span>{workspace.name}</span>
+                        </SidebarMenuButton>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => handleAddToFavorites(workspace.id)}>
+                              <Star className="h-4 w-4 mr-2" />
+                              Toevoegen aan Favorieten
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link2 className="h-4 w-4 mr-2" />
+                              Link kopiëren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Dupliceren
+                              <ChevronRight className="ml-auto h-3 w-3" />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FileEdit className="h-4 w-4 mr-2" />
+                              Naam wijzigen
+                              <span className="ml-auto text-xs text-muted-foreground">⌘R</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FolderOpen className="h-4 w-4 mr-2" />
+                              Verplaatsen naar
+                              <span className="ml-auto text-xs text-muted-foreground">⌘P</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Verplaatsen naar prullenbak
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Open in een nieuw tabblad
+                              <span className="ml-auto text-xs text-muted-foreground">⌘↵</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                              Laatst bewerkt door Jimmy Koopman
+                              <br />
+                              Vandaag om 09:23
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </SidebarMenuItem>
                   ))}
+                  
+                  {/* Team items for current workspace */}
+                  {teamItems
+                    .filter(item => item.workspaceId === currentWorkspaceId)
+                    .map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <div className="group flex items-center">
+                          {item.subItems ? (
+                            <Collapsible className="flex-1">
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton 
+                                  onClick={() => handleMenuClick(item.id)}
+                                  isActive={selectedView === item.id}
+                                >
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.title}</span>
+                                  <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]:rotate-90" />
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.subItems.map((subItem) => (
+                                    <SidebarMenuSubItem key={subItem.id}>
+                                      <SidebarMenuSubButton 
+                                        onClick={() => handleMenuClick(subItem.id)}
+                                        isActive={selectedView === subItem.id}
+                                      >
+                                        <span className="text-xs">{subItem.title}</span>
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          ) : (
+                            <SidebarMenuButton 
+                              onClick={() => handleMenuClick(item.id)}
+                              isActive={selectedView === item.id}
+                              className="flex-1"
+                            >
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                            </SidebarMenuButton>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <MoreHorizontal className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => handleAddToFavorites(item.id)}>
+                                <Star className="h-4 w-4 mr-2" />
+                                Toevoegen aan Favorieten
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Link2 className="h-4 w-4 mr-2" />
+                                Link kopiëren
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Dupliceren
+                                <ChevronRight className="ml-auto h-3 w-3" />
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <FileEdit className="h-4 w-4 mr-2" />
+                                Naam wijzigen
+                                <span className="ml-auto text-xs text-muted-foreground">⌘R</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <FolderOpen className="h-4 w-4 mr-2" />
+                                Verplaatsen naar
+                                <span className="ml-auto text-xs text-muted-foreground">⌘P</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleDeleteTeamItem(item.id)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Verplaatsen naar prullenbak
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Open in een nieuw tabblad
+                                <span className="ml-auto text-xs text-muted-foreground">⌘↵</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                                Laatst bewerkt door Jimmy Koopman
+                                <br />
+                                Vandaag om 09:23
+                              </div>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </SidebarMenuItem>
+                    ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
