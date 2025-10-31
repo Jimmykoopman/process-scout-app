@@ -1079,7 +1079,7 @@ export const JourneyCanvas = () => {
                       </div>
                     </div>
                   ) : selectedPage.type === 'document' ? (
-                    <div className="flex-1 overflow-auto bg-background">
+                    <div className="flex-1 flex flex-col bg-background">
                       <PageEditor
                         page={{
                           id: selectedPage.id,
@@ -1092,9 +1092,9 @@ export const JourneyCanvas = () => {
                         onPageChange={(updatedPage) => {
                           setPageData(prev => ({
                             ...prev,
-                            [selectedPage.id]: updatedPage
+                            [selectedPage.id]: { blocks: updatedPage.blocks }
                           }));
-                          handlePageUpdate(selectedPage.id, updatedPage);
+                          handlePageUpdate(selectedPage.id, { blocks: updatedPage.blocks });
                         }}
                       />
                     </div>
