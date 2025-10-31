@@ -59,6 +59,64 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Check for "- " pattern to auto-create bullet list
+    if (e.key === ' ') {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      const textNode = range.startContainer;
+      
+      if (textNode.nodeType === Node.TEXT_NODE) {
+        const text = textNode.textContent || '';
+        const cursorPos = range.startOffset;
+        
+        // Check if we just typed "- " at the start of a line
+        if (cursorPos === 1 && text === '-') {
+          e.preventDefault();
+          
+          // Remove the "- " text
+          range.setStart(textNode, 0);
+          range.setEnd(textNode, 1);
+          range.deleteContents();
+          
+          // Create unordered list
+          document.execCommand('insertUnorderedList', false);
+          handleInput();
+        }
+      }
+    }
+    
+    // Check for "1. " pattern to auto-create numbered list
+    if (e.key === ' ') {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      const textNode = range.startContainer;
+      
+      if (textNode.nodeType === Node.TEXT_NODE) {
+        const text = textNode.textContent || '';
+        const cursorPos = range.startOffset;
+        
+        // Check if we just typed "1. " at the start of a line
+        if (cursorPos === 2 && text === '1.') {
+          e.preventDefault();
+          
+          // Remove the "1. " text
+          range.setStart(textNode, 0);
+          range.setEnd(textNode, 2);
+          range.deleteContents();
+          
+          // Create ordered list
+          document.execCommand('insertOrderedList', false);
+          handleInput();
+        }
+      }
+    }
+  };
+
   const makeImagesResizable = () => {
     if (!editorRef.current) return;
     
@@ -122,6 +180,7 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
             }}
             onMouseUp={handleSelection}
             onKeyUp={handleSelection}
+            onKeyDown={handleKeyDown}
             dangerouslySetInnerHTML={{ __html: content }}
             style={{ 
               fontFamily: 'Arial, sans-serif',
