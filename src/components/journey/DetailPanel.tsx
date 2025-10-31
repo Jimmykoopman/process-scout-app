@@ -111,14 +111,8 @@ export const DetailPanel = ({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Opmaak</CardTitle>
-              <CardDescription className="text-xs">Gebruik deze knoppen om geselecteerde tekst op te maken</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="p-3 bg-muted/30 rounded-lg border border-border">
-                <p className="text-xs text-muted-foreground mb-2">
-                  💡 Tip: Selecteer tekst in de node en klik dan op dikgedrukt of cursief
-                </p>
-              </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   variant={textStyle.fontWeight === 'bold' ? 'default' : 'outline'}

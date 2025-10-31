@@ -60,157 +60,7 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
-      {/* Toolbar */}
-      <div className="border-b border-border p-2 flex items-center gap-1 flex-wrap bg-card">
-        {/* Font Family */}
-        <Select onValueChange={(value) => handleFormat('fontName', value)}>
-          <SelectTrigger className="w-[140px] h-8">
-            <SelectValue placeholder="Lettertype" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Arial">Arial</SelectItem>
-            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-            <SelectItem value="Courier New">Courier New</SelectItem>
-            <SelectItem value="Georgia">Georgia</SelectItem>
-            <SelectItem value="Verdana">Verdana</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Font Size */}
-        <Select onValueChange={(value) => handleFormat('fontSize', value)}>
-          <SelectTrigger className="w-[80px] h-8">
-            <SelectValue placeholder="Grootte" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">8pt</SelectItem>
-            <SelectItem value="2">10pt</SelectItem>
-            <SelectItem value="3">12pt</SelectItem>
-            <SelectItem value="4">14pt</SelectItem>
-            <SelectItem value="5">18pt</SelectItem>
-            <SelectItem value="6">24pt</SelectItem>
-            <SelectItem value="7">36pt</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Text Formatting */}
-        <Button
-          variant={selectedText ? "default" : "outline"}
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('bold')}
-          title="Vetgedrukt"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={selectedText ? "default" : "outline"}
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('italic')}
-          title="Cursief"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={selectedText ? "default" : "outline"}
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('underline')}
-          title="Onderstreept"
-        >
-          <Underline className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Alignment */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('justifyLeft')}
-          title="Links uitlijnen"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('justifyCenter')}
-          title="Centreren"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('justifyRight')}
-          title="Rechts uitlijnen"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Lists */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('insertUnorderedList')}
-          title="Opsommingslijst"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => handleFormat('insertOrderedList')}
-          title="Genummerde lijst"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Insert */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => fileInputRef.current?.click()}
-          title="Afbeelding invoegen"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => {
-            const url = prompt('Voer URL in:');
-            if (url) handleFormat('createLink', url);
-          }}
-          title="Link invoegen"
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleImageUpload}
-        />
-      </div>
-
+    <div className="flex-1 flex bg-background">
       {/* Editor Area */}
       <div className="flex-1 overflow-auto p-8 flex justify-center">
         <div className="w-full max-w-[21cm] bg-white shadow-lg min-h-[29.7cm] p-[2cm]">
@@ -229,6 +79,168 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
             }}
           />
         </div>
+      </div>
+
+      {/* Right Sidebar with Toolbar */}
+      <div className="w-64 border-l border-border bg-card p-4 space-y-4 overflow-y-auto">
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Lettertype</h3>
+          <Select onValueChange={(value) => handleFormat('fontName', value)}>
+            <SelectTrigger className="w-full h-9">
+              <SelectValue placeholder="Lettertype" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Arial">Arial</SelectItem>
+              <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+              <SelectItem value="Courier New">Courier New</SelectItem>
+              <SelectItem value="Georgia">Georgia</SelectItem>
+              <SelectItem value="Verdana">Verdana</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Grootte</h3>
+          <Select onValueChange={(value) => handleFormat('fontSize', value)}>
+            <SelectTrigger className="w-full h-9">
+              <SelectValue placeholder="Grootte" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">8pt</SelectItem>
+              <SelectItem value="2">10pt</SelectItem>
+              <SelectItem value="3">12pt</SelectItem>
+              <SelectItem value="4">14pt</SelectItem>
+              <SelectItem value="5">18pt</SelectItem>
+              <SelectItem value="6">24pt</SelectItem>
+              <SelectItem value="7">36pt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Opmaak</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('bold')}
+              title="Vetgedrukt"
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('italic')}
+              title="Cursief"
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('underline')}
+              title="Onderstreept"
+            >
+              <Underline className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Uitlijning</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('justifyLeft')}
+              title="Links uitlijnen"
+            >
+              <AlignLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('justifyCenter')}
+              title="Centreren"
+            >
+              <AlignCenter className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('justifyRight')}
+              title="Rechts uitlijnen"
+            >
+              <AlignRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Lijsten</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('insertUnorderedList')}
+              title="Opsommingslijst"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => handleFormat('insertOrderedList')}
+              title="Genummerde lijst"
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Invoegen</h3>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImageIcon className="h-4 w-4" />
+              Afbeelding
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => {
+                const url = prompt('Voer URL in:');
+                if (url) handleFormat('createLink', url);
+              }}
+            >
+              <LinkIcon className="h-4 w-4" />
+              Link
+            </Button>
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
       </div>
     </div>
   );
