@@ -43,3 +43,43 @@ export interface Document {
   nodePath: string;
   uploadDate: string;
 }
+
+export type FieldType = 
+  | 'text' 
+  | 'number' 
+  | 'select' 
+  | 'multiselect' 
+  | 'status' 
+  | 'date' 
+  | 'person' 
+  | 'checkbox' 
+  | 'url' 
+  | 'email' 
+  | 'phone' 
+  | 'files';
+
+export interface DatabaseField {
+  id: string;
+  name: string;
+  type: FieldType;
+  options?: string[]; // For select/multiselect/status
+}
+
+export interface DatabaseRow {
+  id: string;
+  [key: string]: any; // Dynamic fields based on database schema
+}
+
+export interface DatabaseSchema {
+  id: string;
+  name: string;
+  fields: DatabaseField[];
+  rows: DatabaseRow[];
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+}

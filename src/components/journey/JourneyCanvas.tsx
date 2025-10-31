@@ -20,6 +20,7 @@ import { ExpandedNodeView } from './ExpandedNodeView';
 import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink } from '@/types/journey';
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DatabaseManager } from '@/components/database/DatabaseManager';
 import { toast } from 'sonner';
 
 const nodeTypes = {
@@ -43,6 +44,9 @@ export const JourneyCanvas = () => {
   
   // Journey nodes with text styles and links
   const [journeyData, setJourneyData] = useState(sampleJourneyData);
+  
+  // View management
+  const [currentView, setCurrentView] = useState<'journey' | 'database'>('journey');
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -276,7 +280,13 @@ export const JourneyCanvas = () => {
   }, []);
 
   const handleMenuSelect = useCallback((menuId: string) => {
-    toast.info(`Menu geselecteerd: ${menuId}`);
+    if (menuId === 'database') {
+      setCurrentView('database');
+      toast.info('Database weergave geopend');
+    } else {
+      setCurrentView('journey');
+      toast.info(`Menu geselecteerd: ${menuId}`);
+    }
   }, []);
 
   return (
@@ -299,43 +309,49 @@ export const JourneyCanvas = () => {
           </div>
           
           <div className="flex-1 relative flex">
-            <div className="flex-1 relative">
-              <Toolbar
-                onAddNode={handleAddNode}
-                onShapeChange={setSelectedShape}
-                selectedShape={selectedShape}
-              />
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                fitView
-                className="bg-canvas-bg"
-              >
-                <Background color="#cbd5e1" gap={20} />
-                <Controls />
-                <MiniMap
-                  nodeColor={(node) => {
-                    const data = node.data as { color?: string };
-                    return data.color || '#0891B2';
-                  }}
-                  className="bg-card border border-border"
+            {currentView === 'database' ? (
+              <DatabaseManager />
+            ) : (
+              <>
+                <div className="flex-1 relative">
+                  <Toolbar
+                    onAddNode={handleAddNode}
+                    onShapeChange={setSelectedShape}
+                    selectedShape={selectedShape}
+                  />
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    className="bg-canvas-bg"
+                  >
+                    <Background color="#cbd5e1" gap={20} />
+                    <Controls />
+                    <MiniMap
+                      nodeColor={(node) => {
+                        const data = node.data as { color?: string };
+                        return data.color || '#0891B2';
+                      }}
+                      className="bg-card border border-border"
+                    />
+                  </ReactFlow>
+                </div>
+                <DetailPanel
+                  node={selectedNode}
+                  onClose={handleClosePanel}
+                  onChildClick={handleChildClick}
+                  breadcrumbs={breadcrumbs}
+                  onDocumentUpload={handleDocumentUpload}
+                  onTextStyleChange={handleTextStyleChange}
+                  onLinkAdd={handleLinkAdd}
+                  onLinkRemove={handleLinkRemove}
                 />
-              </ReactFlow>
-            </div>
-            <DetailPanel
-              node={selectedNode}
-              onClose={handleClosePanel}
-              onChildClick={handleChildClick}
-              breadcrumbs={breadcrumbs}
-              onDocumentUpload={handleDocumentUpload}
-              onTextStyleChange={handleTextStyleChange}
-              onLinkAdd={handleLinkAdd}
-              onLinkRemove={handleLinkRemove}
-            />
+              </>
+            )}
           </div>
         </div>
 
