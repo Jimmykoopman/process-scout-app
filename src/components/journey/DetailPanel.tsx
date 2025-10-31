@@ -1,12 +1,11 @@
-import { X, ChevronRight, FileText, Upload, Link as LinkIcon, Plus, Trash2, Pencil, Check, Maximize2 } from 'lucide-react';
+import { X, ChevronRight, FileText, Upload, Link2, Plus, Trash2, Maximize2, Bold, Italic, Type } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { JourneyNode, TextStyle } from '@/types/journey';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useRef, useState } from 'react';
-import { TextFormattingToolbar } from './TextFormattingToolbar';
+import React from 'react';
 
 interface DetailPanelProps {
   node: JourneyNode | null;
@@ -36,8 +35,8 @@ export const DetailPanel = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
 
   if (!node) return null;
 
@@ -60,27 +59,27 @@ export const DetailPanel = ({
       onLinkAdd?.(node.id, newLinkUrl, newLinkLabel || newLinkUrl);
       setNewLinkUrl('');
       setNewLinkLabel('');
+      setShowLinkDialog(false);
     }
   };
 
-  const handleStartEditLabel = () => {
+  const handleLabelChange = (newLabel: string) => {
+    setEditedLabel(newLabel);
+  };
+
+  const handleLabelBlur = () => {
+    if (node && editedLabel.trim() && editedLabel !== node.label) {
+      onNodeLabelChange?.(node.id, editedLabel.trim());
+    } else if (node) {
+      setEditedLabel(node.label);
+    }
+  };
+
+  React.useEffect(() => {
     if (node) {
       setEditedLabel(node.label);
-      setIsEditingLabel(true);
     }
-  };
-
-  const handleSaveLabel = () => {
-    if (node && editedLabel.trim()) {
-      onNodeLabelChange?.(node.id, editedLabel.trim());
-      setIsEditingLabel(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingLabel(false);
-    setEditedLabel('');
-  };
+  }, [node]);
 
   return (
     <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full">
@@ -107,59 +106,140 @@ export const DetailPanel = ({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              {isEditingLabel ? (
-                <>
-                  <Input
-                    value={editedLabel}
-                    onChange={(e) => setEditedLabel(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSaveLabel();
-                      if (e.key === 'Escape') handleCancelEdit();
-                    }}
-                    className="text-2xl font-bold"
-                    autoFocus
-                  />
-                  <Button size="icon" variant="ghost" onClick={handleSaveLabel}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <h2 
-                    className="text-2xl font-bold flex-1"
-                    style={{
-                      fontSize: `${textStyle.fontSize}px`,
-                      fontWeight: textStyle.fontWeight,
-                      fontStyle: textStyle.fontStyle,
-                    }}
-                  >
-                    {node.label}
-                  </h2>
-                  <Button size="icon" variant="ghost" onClick={handleStartEditLabel}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
+            <Input
+              value={editedLabel}
+              onChange={(e) => handleLabelChange(e.target.value)}
+              onBlur={handleLabelBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
+              className="text-2xl font-bold border-0 px-0 focus-visible:ring-0"
+              style={{
+                fontSize: `${textStyle.fontSize}px`,
+                fontWeight: textStyle.fontWeight,
+                fontStyle: textStyle.fontStyle,
+              }}
+            />
             {node.details && (
-              <p className="text-muted-foreground">{node.details}</p>
+              <p className="text-muted-foreground mt-2">{node.details}</p>
             )}
           </div>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tekst Formatting</CardTitle>
-              <CardDescription>Pas de weergave van deze node aan</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Opmaak</CardTitle>
             </CardHeader>
-            <CardContent>
-              <TextFormattingToolbar 
-                textStyle={textStyle}
-                onStyleChange={handleStyleChange}
-              />
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant={textStyle.fontWeight === 'bold' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleStyleChange({ 
+                    fontWeight: textStyle.fontWeight === 'bold' ? 'normal' : 'bold' 
+                  })}
+                  className="h-8 w-8 p-0"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={textStyle.fontStyle === 'italic' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleStyleChange({ 
+                    fontStyle: textStyle.fontStyle === 'italic' ? 'normal' : 'italic' 
+                  })}
+                  className="h-8 w-8 p-0"
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center gap-1 ml-2">
+                  <Type className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={textStyle.fontSize}
+                    onChange={(e) => handleStyleChange({ fontSize: parseInt(e.target.value) || 16 })}
+                    className="h-8 w-16 text-center"
+                    min="8"
+                    max="72"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLinkDialog(!showLinkDialog)}
+                  className="h-8 w-8 p-0"
+                  title="Link toevoegen"
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 w-8 p-0"
+                  title="Document uploaden"
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                />
+              </div>
+
+              {showLinkDialog && (
+                <div className="space-y-2 p-3 border border-border rounded-lg bg-muted/20">
+                  <Input
+                    placeholder="https://example.com"
+                    value={newLinkUrl}
+                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                    className="h-8"
+                  />
+                  <Input
+                    placeholder="Label (optioneel)"
+                    value={newLinkLabel}
+                    onChange={(e) => setNewLinkLabel(e.target.value)}
+                    className="h-8"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleAddLink} size="sm" disabled={!newLinkUrl.trim()} className="flex-1">
+                      Toevoegen
+                    </Button>
+                    <Button onClick={() => setShowLinkDialog(false)} size="sm" variant="outline">
+                      Annuleer
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {node.links && node.links.length > 0 && (
+                <div className="space-y-1">
+                  {node.links.map((link) => (
+                    <div
+                      key={link.id}
+                      className="flex items-center justify-between p-2 rounded bg-muted text-xs"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Link2 className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{link.label}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 flex-shrink-0"
+                        onClick={() => onLinkRemove?.(node.id, link.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -188,157 +268,79 @@ export const DetailPanel = ({
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Links</CardTitle>
-              <CardDescription>Voeg externe links toe (dubbel-klik op node om te openen)</CardDescription>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Document Preview</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onExpandDocument}
+                  className="h-7 text-xs gap-1"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  Volledig scherm
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="link-url">URL</Label>
-                <Input
-                  id="link-url"
-                  placeholder="https://example.com"
-                  value={newLinkUrl}
-                  onChange={(e) => setNewLinkUrl(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="link-label">Label (optioneel)</Label>
-                <Input
-                  id="link-label"
-                  placeholder="Mijn link"
-                  value={newLinkLabel}
-                  onChange={(e) => setNewLinkLabel(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleAddLink} className="w-full" disabled={!newLinkUrl.trim()}>
-                <Plus className="w-4 h-4 mr-2" />
-                Link toevoegen
-              </Button>
-
-              {node.links && node.links.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  {node.links.map((link) => (
-                    <div
-                      key={link.id}
-                      className="flex items-center justify-between p-2 rounded-lg bg-muted"
-                    >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <LinkIcon className="w-4 h-4 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{link.label}</p>
-                          <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 flex-shrink-0"
-                        onClick={() => onLinkRemove?.(node.id, link.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+            <CardContent>
+              {/* A4 format preview - scaled down */}
+              <div 
+                className="border border-border rounded bg-white shadow-sm overflow-auto"
+                style={{ 
+                  width: '100%',
+                  height: '500px',
+                }}
+              >
+                <div className="p-6 space-y-4" style={{ fontSize: '11px' }}>
+                  <h3 className="font-bold text-lg" style={{ fontSize: '16px' }}>{node.label}</h3>
+                  
+                  {node.details && (
+                    <div>
+                      <h4 className="font-semibold mb-1" style={{ fontSize: '13px' }}>Details</h4>
+                      <p className="text-muted-foreground whitespace-pre-wrap">{node.details}</p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                  
+                  {node.links && node.links.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-1" style={{ fontSize: '13px' }}>Links</h4>
+                      <ul className="space-y-1 list-disc list-inside">
+                        {node.links.map((link) => (
+                          <li key={link.id} className="text-muted-foreground">
+                            {link.label || link.url}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {node.children && node.children.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-1" style={{ fontSize: '13px' }}>Onderdelen</h4>
+                      <ul className="space-y-1 list-disc list-inside">
+                        {node.children.map((child) => (
+                          <li key={child.id} className="text-muted-foreground">
+                            {child.label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Document Preview</CardTitle>
-              <CardDescription>Inhoud van deze node</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Preview of node content */}
-              <div className="border border-border rounded-lg p-4 bg-muted/20 max-h-[300px] overflow-auto">
-                <h3 className="font-semibold mb-2">{node.label}</h3>
-                {node.details && (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mb-3">{node.details}</p>
-                )}
-                
-                {node.links && node.links.length > 0 && (
-                  <div className="mb-3">
-                    <h4 className="text-sm font-medium mb-1">Links:</h4>
-                    <ul className="space-y-1">
-                      {node.links.slice(0, 3).map((link) => (
-                        <li key={link.id} className="text-xs text-muted-foreground truncate">
-                          • {link.label || link.url}
-                        </li>
-                      ))}
-                      {node.links.length > 3 && (
-                        <li className="text-xs text-muted-foreground">... en {node.links.length - 3} meer</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-                
-                {node.children && node.children.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Onderdelen:</h4>
-                    <ul className="space-y-1">
-                      {node.children.slice(0, 3).map((child) => (
-                        <li key={child.id} className="text-xs text-muted-foreground">
-                          • {child.label}
-                        </li>
-                      ))}
-                      {node.children.length > 3 && (
-                        <li className="text-xs text-muted-foreground">... en {node.children.length - 3} meer</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
+                  {node.documents && node.documents.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-1" style={{ fontSize: '13px' }}>Documenten</h4>
+                      <ul className="space-y-1 list-disc list-inside">
+                        {node.documents.map((doc, index) => (
+                          <li key={index} className="text-muted-foreground">
+                            {doc}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <Button
-                variant="outline"
-                className="w-full justify-center gap-2"
-                onClick={onExpandDocument}
-              >
-                <Maximize2 className="w-4 h-4" />
-                <span>Vergroot naar volledig scherm</span>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Documenten</CardTitle>
-              <CardDescription>Upload documenten voor dit item</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-center gap-2 border-dashed"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="w-4 h-4" />
-                <span>Upload document</span>
-              </Button>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
-              />
-              
-              {node.documents && node.documents.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  {node.documents.map((doc, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="w-full justify-start gap-2 hover:bg-secondary/10"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>{doc}</span>
-                    </Button>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
