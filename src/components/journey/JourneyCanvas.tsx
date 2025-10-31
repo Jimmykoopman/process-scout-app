@@ -63,6 +63,7 @@ export const JourneyCanvas = () => {
   };
 
   const journeyData = pageData[getCurrentPageKey()] || { stages: [] };
+  const stages: JourneyNode[] = Array.isArray(journeyData?.stages) ? journeyData.stages : [];
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -70,7 +71,11 @@ export const JourneyCanvas = () => {
     const xSpacing = 250;
     const ySpacing = 150;
 
-    journeyData.stages.forEach((stage, index) => {
+    if (!stages || stages.length === 0) {
+      return nodes;
+    }
+
+    stages.forEach((stage, index) => {
       nodes.push({
         id: stage.id,
         type: 'custom',
@@ -91,10 +96,7 @@ export const JourneyCanvas = () => {
           nodes.push({
             id: child.id,
             type: 'custom',
-            position: { 
-              x: index * xSpacing - 100 + childIndex * 120, 
-              y: 300 + ySpacing 
-            },
+            position: { x: index * xSpacing - 100 + childIndex * 120, y: 300 + ySpacing },
             data: {
               label: child.label,
               shape: child.shape,
@@ -108,19 +110,23 @@ export const JourneyCanvas = () => {
     });
 
     return nodes;
-  }, [journeyData]);
+  }, [stages]);
 
   const createEdgesFromData = useCallback(() => {
     const edges: Edge[] = [];
     let edgeId = 0;
 
-    journeyData.stages.forEach((stage, index) => {
+    if (!stages || stages.length === 0) {
+      return edges;
+    }
+
+    stages.forEach((stage, index) => {
       // Connect stages
-      if (index < journeyData.stages.length - 1) {
+      if (index < stages.length - 1) {
         edges.push({
           id: `e${edgeId++}`,
           source: stage.id,
-          target: journeyData.stages[index + 1].id,
+          target: stages[index + 1].id,
           type: 'smoothstep',
           markerEnd: {
             type: MarkerType.ArrowClosed,
@@ -144,7 +150,7 @@ export const JourneyCanvas = () => {
     });
 
     return edges;
-  }, [journeyData]);
+  }, [stages]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(createNodesFromData());
   const [edges, setEdges, onEdgesChange] = useEdgesState(createEdgesFromData());
