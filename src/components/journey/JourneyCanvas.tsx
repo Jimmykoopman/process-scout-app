@@ -45,13 +45,23 @@ export const JourneyCanvas = () => {
   // Document management
   const [documents, setDocuments] = useState<Document[]>([]);
   
-  // Journey nodes with text styles and links
-  const [journeyData, setJourneyData] = useState(sampleJourneyData);
+  // Journey nodes with text styles and links - per page
+  const [pageData, setPageData] = useState<Record<string, any>>({
+    'default': sampleJourneyData
+  });
   
   // View management
   const [currentView, setCurrentView] = useState<'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('journey');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
+
+  // Get current page data
+  const getCurrentPageKey = () => {
+    if (selectedPage) return selectedPage.id;
+    return 'default';
+  };
+
+  const journeyData = pageData[getCurrentPageKey()] || { stages: [] };
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -180,8 +190,10 @@ export const JourneyCanvas = () => {
   }, [selectedShape, setNodes]);
 
   const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
+    const pageKey = getCurrentPageKey();
+    const currentData = pageData[pageKey] || { stages: [] };
     const fileNames = Array.from(files).map(f => f.name);
-    const nodePath = findNodePath(nodeId, journeyData.stages);
+    const nodePath = findNodePath(nodeId, currentData.stages);
     
     const newDocuments: Document[] = fileNames.map((name, index) => ({
       id: `${nodeId}-doc-${Date.now()}-${index}`,
@@ -193,7 +205,7 @@ export const JourneyCanvas = () => {
     
     setDocuments(prev => [...prev, ...newDocuments]);
     toast.success(`${fileNames.length} document(en) geüpload`);
-  }, [journeyData]);
+  }, [pageData, selectedPage]);
 
   const findNodePath = (nodeId: string, stages: JourneyNode[], path: string = ''): string => {
     for (const stage of stages) {
@@ -208,6 +220,7 @@ export const JourneyCanvas = () => {
   };
 
   const handleTextStyleChange = useCallback((nodeId: string, style: Partial<TextStyle>) => {
+    const pageKey = getCurrentPageKey();
     const updateNodeStyle = (nodes: JourneyNode[]): JourneyNode[] => {
       return nodes.map(node => {
         if (node.id === nodeId) {
@@ -220,11 +233,15 @@ export const JourneyCanvas = () => {
       });
     };
     
-    setJourneyData(prev => ({ ...prev, stages: updateNodeStyle(prev.stages) }));
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: { ...prev[pageKey], stages: updateNodeStyle(prev[pageKey]?.stages || []) }
+    }));
     toast.success('Tekst formatting bijgewerkt');
-  }, []);
+  }, [selectedPage]);
 
   const handleLinkAdd = useCallback((nodeId: string, url: string, label: string) => {
+    const pageKey = getCurrentPageKey();
     const updateNodeLinks = (nodes: JourneyNode[]): JourneyNode[] => {
       return nodes.map(node => {
         if (node.id === nodeId) {
@@ -238,11 +255,15 @@ export const JourneyCanvas = () => {
       });
     };
     
-    setJourneyData(prev => ({ ...prev, stages: updateNodeLinks(prev.stages) }));
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: { ...prev[pageKey], stages: updateNodeLinks(prev[pageKey]?.stages || []) }
+    }));
     toast.success('Link toegevoegd');
-  }, []);
+  }, [selectedPage]);
 
   const handleLinkRemove = useCallback((nodeId: string, linkId: string) => {
+    const pageKey = getCurrentPageKey();
     const updateNodeLinks = (nodes: JourneyNode[]): JourneyNode[] => {
       return nodes.map(node => {
         if (node.id === nodeId) {
@@ -255,9 +276,12 @@ export const JourneyCanvas = () => {
       });
     };
     
-    setJourneyData(prev => ({ ...prev, stages: updateNodeLinks(prev.stages) }));
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: { ...prev[pageKey], stages: updateNodeLinks(prev[pageKey]?.stages || []) }
+    }));
     toast.success('Link verwijderd');
-  }, []);
+  }, [selectedPage]);
 
   const handleAddWorkspace = useCallback((name: string, type: WorkspaceType) => {
     const newWorkspace: Workspace = {
@@ -275,7 +299,10 @@ export const JourneyCanvas = () => {
     setCurrentWorkspaceId(workspaceId);
     const workspace = workspaces.find(w => w.id === workspaceId);
     if (workspace) {
-      setJourneyData(workspace.data);
+      setPageData(prev => ({
+        ...prev,
+        'default': workspace.data
+      }));
       toast.info(`Workspace "${workspace.name}" geladen`);
     }
   }, [workspaces]);
@@ -319,8 +346,12 @@ export const JourneyCanvas = () => {
   }, []);
 
   const handlePageUpdate = useCallback((pageId: string, content: any) => {
+    setPageData(prev => ({
+      ...prev,
+      [pageId]: content
+    }));
     setPages(prev => prev.map(p => 
-      p.id === pageId ? { ...p, content, updatedAt: new Date().toISOString() } : p
+      p.id === pageId ? { ...p, updatedAt: new Date().toISOString() } : p
     ));
   }, []);
 
@@ -333,6 +364,13 @@ export const JourneyCanvas = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    
+    // Initialize empty data for the new page
+    setPageData(prev => ({
+      ...prev,
+      [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? '' : {})
+    }));
+    
     setPages(prev => [...prev, newPage as any]);
     setSelectedPage(newPage);
     toast.success(`${type} aangemaakt`);
@@ -414,7 +452,7 @@ export const JourneyCanvas = () => {
                     </>
                   ) : selectedPage.type === 'document' ? (
                     <DocumentEditor 
-                      content={selectedPage.content}
+                      content={pageData[selectedPage.id] || ''}
                       onChange={(content) => handlePageUpdate(selectedPage.id, content)}
                     />
                   ) : selectedPage.type === 'database' ? (
