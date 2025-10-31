@@ -390,7 +390,7 @@ export function AppSidebar({
                                   className="flex-1"
                                 >
                                   <Home className="h-4 w-4" />
-                                  <span>{workspace.name} Home</span>
+                                  <span>{workspace.name}</span>
                                 </SidebarMenuButton>
                               )}
                             </div>
