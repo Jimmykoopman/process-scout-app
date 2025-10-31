@@ -1,4 +1,4 @@
-import { X, ChevronRight, FileText, Upload, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
+import { X, ChevronRight, FileText, Upload, Link as LinkIcon, Plus, Trash2, Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { JourneyNode, TextStyle } from '@/types/journey';
@@ -14,6 +14,7 @@ interface DetailPanelProps {
   onChildClick: (child: JourneyNode) => void;
   breadcrumbs: JourneyNode[];
   onDocumentUpload?: (nodeId: string, files: FileList) => void;
+  onNodeLabelChange?: (nodeId: string, newLabel: string) => void;
   onTextStyleChange?: (nodeId: string, style: Partial<TextStyle>) => void;
   onLinkAdd?: (nodeId: string, url: string, label: string) => void;
   onLinkRemove?: (nodeId: string, linkId: string) => void;
@@ -25,6 +26,7 @@ export const DetailPanel = ({
   onChildClick, 
   breadcrumbs, 
   onDocumentUpload,
+  onNodeLabelChange,
   onTextStyleChange,
   onLinkAdd,
   onLinkRemove 
@@ -32,6 +34,8 @@ export const DetailPanel = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
+  const [editedLabel, setEditedLabel] = useState('');
 
   if (!node) return null;
 
@@ -55,6 +59,25 @@ export const DetailPanel = ({
       setNewLinkUrl('');
       setNewLinkLabel('');
     }
+  };
+
+  const handleStartEditLabel = () => {
+    if (node) {
+      setEditedLabel(node.label);
+      setIsEditingLabel(true);
+    }
+  };
+
+  const handleSaveLabel = () => {
+    if (node && editedLabel.trim()) {
+      onNodeLabelChange?.(node.id, editedLabel.trim());
+      setIsEditingLabel(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingLabel(false);
+    setEditedLabel('');
   };
 
   return (
@@ -82,16 +105,44 @@ export const DetailPanel = ({
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           <div>
-            <h2 
-              className="text-2xl font-bold mb-2"
-              style={{
-                fontSize: `${textStyle.fontSize}px`,
-                fontWeight: textStyle.fontWeight,
-                fontStyle: textStyle.fontStyle,
-              }}
-            >
-              {node.label}
-            </h2>
+            <div className="flex items-center gap-2 mb-2">
+              {isEditingLabel ? (
+                <>
+                  <Input
+                    value={editedLabel}
+                    onChange={(e) => setEditedLabel(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveLabel();
+                      if (e.key === 'Escape') handleCancelEdit();
+                    }}
+                    className="text-2xl font-bold"
+                    autoFocus
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleSaveLabel}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <h2 
+                    className="text-2xl font-bold flex-1"
+                    style={{
+                      fontSize: `${textStyle.fontSize}px`,
+                      fontWeight: textStyle.fontWeight,
+                      fontStyle: textStyle.fontStyle,
+                    }}
+                  >
+                    {node.label}
+                  </h2>
+                  <Button size="icon" variant="ghost" onClick={handleStartEditLabel}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
             {node.details && (
               <p className="text-muted-foreground">{node.details}</p>
             )}

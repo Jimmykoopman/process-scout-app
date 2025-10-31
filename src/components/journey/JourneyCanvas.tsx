@@ -54,6 +54,7 @@ export const JourneyCanvas = () => {
   const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('home');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
+  const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
 
   // Get current page data
   const getCurrentPageKey = () => {
@@ -220,17 +221,39 @@ export const JourneyCanvas = () => {
   );
 
   const handleAddNode = useCallback(() => {
-    const newNode: Node = {
+    const pageKey = getCurrentPageKey();
+    const newJourneyNode: JourneyNode = {
       id: `node-${Date.now()}`,
+      label: 'Nieuwe node',
+      shape: selectedShape,
+      color: '#0891B2',
+    };
+
+    // Add to journey data
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: {
+        ...prev[pageKey],
+        stages: [...(prev[pageKey]?.stages || []), newJourneyNode]
+      }
+    }));
+
+    // Add to React Flow
+    const newNode: Node = {
+      id: newJourneyNode.id,
       type: 'custom',
       position: { x: Math.random() * 500, y: Math.random() * 500 },
       data: {
-        label: 'Nieuwe node',
-        shape: selectedShape,
+        label: newJourneyNode.label,
+        shape: newJourneyNode.shape,
+        color: newJourneyNode.color,
+        onClick: () => handleNodeClick(newJourneyNode),
+        onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
       },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [selectedShape, setNodes]);
+    toast.success('Node toegevoegd');
+  }, [selectedShape, setNodes, selectedPage]);
 
   const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
     const pageKey = getCurrentPageKey();
@@ -261,6 +284,33 @@ export const JourneyCanvas = () => {
     }
     return '';
   };
+
+  const handleNodeLabelChange = useCallback((nodeId: string, newLabel: string) => {
+    const pageKey = getCurrentPageKey();
+    const updateNodeLabel = (nodes: JourneyNode[]): JourneyNode[] => {
+      return nodes.map(node => {
+        if (node.id === nodeId) {
+          return { ...node, label: newLabel };
+        }
+        if (node.children) {
+          return { ...node, children: updateNodeLabel(node.children) };
+        }
+        return node;
+      });
+    };
+    
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: { ...prev[pageKey], stages: updateNodeLabel(prev[pageKey]?.stages || []) }
+    }));
+    
+    // Update React Flow nodes
+    setNodes(nodes => nodes.map(node => 
+      node.id === nodeId ? { ...node, data: { ...node.data, label: newLabel } } : node
+    ));
+    
+    toast.success('Node naam bijgewerkt');
+  }, [selectedPage, setNodes]);
 
   const handleTextStyleChange = useCallback((nodeId: string, style: Partial<TextStyle>) => {
     const pageKey = getCurrentPageKey();
@@ -335,7 +385,91 @@ export const JourneyCanvas = () => {
     };
     setWorkspaces(prev => [...prev, newWorkspace]);
     setCurrentWorkspaceId(newWorkspace.id);
+    setWorkspacePages(prev => ({ ...prev, [newWorkspace.id]: [] }));
     toast.success(`Workspace "${name}" aangemaakt`);
+  }, []);
+
+  const handleRenameWorkspace = useCallback((workspaceId: string, newName: string) => {
+    setWorkspaces(prev => prev.map(w => 
+      w.id === workspaceId ? { ...w, name: newName } : w
+    ));
+    toast.success('Workspace hernoemd');
+  }, []);
+
+  const handleDeleteWorkspace = useCallback((workspaceId: string) => {
+    setWorkspaces(prev => prev.filter(w => w.id !== workspaceId));
+    setWorkspacePages(prev => {
+      const newPages = { ...prev };
+      delete newPages[workspaceId];
+      return newPages;
+    });
+    if (currentWorkspaceId === workspaceId) {
+      const remaining = workspaces.filter(w => w.id !== workspaceId);
+      if (remaining.length > 0) {
+        setCurrentWorkspaceId(remaining[0].id);
+      }
+    }
+    toast.success('Workspace verwijderd');
+  }, [currentWorkspaceId, workspaces]);
+
+  const handleDeleteWorkspacePage = useCallback((workspaceId: string, pageId: string) => {
+    setWorkspacePages(prev => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).filter(p => p.id !== pageId)
+    }));
+    if (selectedPage?.id === pageId) {
+      setSelectedPage(null);
+      setCurrentView('home');
+    }
+    toast.success('Pagina verwijderd');
+  }, [selectedPage]);
+
+  const handleRenameWorkspacePage = useCallback((workspaceId: string, pageId: string, newTitle: string) => {
+    setWorkspacePages(prev => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).map(p =>
+        p.id === pageId ? { ...p, title: newTitle, updatedAt: new Date().toISOString() } : p
+      )
+    }));
+    if (selectedPage?.id === pageId) {
+      setSelectedPage(prev => prev ? { ...prev, title: newTitle } : null);
+    }
+    toast.success('Pagina hernoemd');
+  }, [selectedPage]);
+
+  const handleAddPageToWorkspace = useCallback((workspaceId: string, pageType: PageType) => {
+    const typeNames = {
+      mindmap: 'Mindmap',
+      document: 'Document',
+      database: 'Database',
+      form: 'Formulier'
+    };
+    
+    const newPage: WorkspacePage = {
+      id: `page-${Date.now()}`,
+      title: `Nieuwe ${typeNames[pageType]}`,
+      type: pageType,
+      workspaceId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Initialize empty data for the new page
+    setPageData(prev => ({
+      ...prev,
+      [newPage.id]: pageType === 'mindmap' ? { stages: [] } : (pageType === 'document' ? { blocks: [] } : {})
+    }));
+    
+    // Add to workspace pages
+    setWorkspacePages(prev => ({
+      ...prev,
+      [workspaceId]: [...(prev[workspaceId] || []), newPage]
+    }));
+    
+    setPages(prev => [...prev, newPage as any]);
+    setSelectedPage(newPage);
+    setCurrentView('workspace-page');
+    toast.success(`${typeNames[pageType]} aangemaakt`);
   }, []);
 
   const handleWorkspaceChange = useCallback((workspaceId: string) => {
@@ -400,9 +534,16 @@ export const JourneyCanvas = () => {
   }, []);
 
   const handleCreatePageInWorkspace = useCallback((type: PageType) => {
+    const typeNames = {
+      mindmap: 'Mindmap',
+      document: 'Document',
+      database: 'Database',
+      form: 'Formulier'
+    };
+
     const newPage: WorkspacePage = {
       id: `page-${Date.now()}`,
-      title: `Nieuwe ${type}`,
+      title: `Nieuwe ${typeNames[type]}`,
       type,
       workspaceId: currentWorkspaceId,
       createdAt: new Date().toISOString(),
@@ -415,9 +556,16 @@ export const JourneyCanvas = () => {
       [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? { blocks: [] } : {})
     }));
     
+    // Add to workspace pages
+    setWorkspacePages(prev => ({
+      ...prev,
+      [currentWorkspaceId]: [...(prev[currentWorkspaceId] || []), newPage]
+    }));
+    
     setPages(prev => [...prev, newPage as any]);
     setSelectedPage(newPage);
-    toast.success(`${type} aangemaakt`);
+    setCurrentView('workspace-page');
+    toast.success(`${typeNames[type]} aangemaakt`);
   }, [currentWorkspaceId]);
 
   return (
@@ -429,8 +577,14 @@ export const JourneyCanvas = () => {
           currentWorkspaceId={currentWorkspaceId}
           onWorkspaceChange={handleWorkspaceChange}
           onAddWorkspace={handleAddWorkspace}
+          onRenameWorkspace={handleRenameWorkspace}
+          onDeleteWorkspace={handleDeleteWorkspace}
           documents={documents}
           onDocumentClick={handleDocumentClick}
+          workspacePages={workspacePages}
+          onDeleteWorkspacePage={handleDeleteWorkspacePage}
+          onRenameWorkspacePage={handleRenameWorkspacePage}
+          onAddPageToWorkspace={handleAddPageToWorkspace}
         />
         
         <div className="flex-1 flex flex-col">
@@ -503,6 +657,7 @@ export const JourneyCanvas = () => {
                           onChildClick={handleChildClick}
                           breadcrumbs={breadcrumbs}
                           onDocumentUpload={handleDocumentUpload}
+                          onNodeLabelChange={handleNodeLabelChange}
                           onTextStyleChange={handleTextStyleChange}
                           onLinkAdd={handleLinkAdd}
                           onLinkRemove={handleLinkRemove}

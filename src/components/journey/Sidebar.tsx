@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle } from 'lucide-react';
+import { FileText, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle, Check, X } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -36,8 +36,14 @@ interface AppSidebarProps {
   currentWorkspaceId: string;
   onWorkspaceChange: (workspaceId: string) => void;
   onAddWorkspace: (name: string, type: any) => void;
+  onRenameWorkspace: (workspaceId: string, newName: string) => void;
+  onDeleteWorkspace: (workspaceId: string) => void;
   documents: Document[];
   onDocumentClick: (doc: Document) => void;
+  workspacePages: Record<string, WorkspacePage[]>;
+  onDeleteWorkspacePage: (workspaceId: string, pageId: string) => void;
+  onRenameWorkspacePage: (workspaceId: string, pageId: string, newTitle: string) => void;
+  onAddPageToWorkspace: (workspaceId: string, pageType: PageType) => void;
 }
 
 const mainItems = [
@@ -58,8 +64,14 @@ export function AppSidebar({
   currentWorkspaceId,
   onWorkspaceChange,
   onAddWorkspace,
+  onRenameWorkspace,
+  onDeleteWorkspace,
   documents,
-  onDocumentClick
+  onDocumentClick,
+  workspacePages,
+  onDeleteWorkspacePage,
+  onRenameWorkspacePage,
+  onAddPageToWorkspace
 }: AppSidebarProps) {
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,11 +82,12 @@ export function AppSidebar({
     subItems?: Array<{ title: string; id: string }>;
   }>>([]);
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({});
-  const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
   const [openSections, setOpenSections] = useState({
     private: true,
     teams: true,
   });
+  const [renamingItem, setRenamingItem] = useState<{ type: 'workspace' | 'page', id: string, workspaceId?: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const handleMenuClick = (id: string) => {
     setSelectedView(id);
@@ -112,38 +125,31 @@ export function AppSidebar({
     }));
   };
 
-  const handleAddPageToWorkspace = (workspaceId: string, pageType: PageType) => {
-    const typeNames = {
-      mindmap: 'Mindmap',
-      document: 'Document',
-      database: 'Database',
-      form: 'Formulier'
-    };
+  const handleStartRename = (type: 'workspace' | 'page', id: string, currentName: string, workspaceId?: string) => {
+    setRenamingItem({ type, id, workspaceId });
+    setRenameValue(currentName);
+  };
+
+  const handleSaveRename = () => {
+    if (!renamingItem || !renameValue.trim()) return;
     
-    const newPage: WorkspacePage = {
-      id: `page-${Date.now()}`,
-      title: `Nieuwe ${typeNames[pageType]}`,
-      workspaceId,
-      type: pageType,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setWorkspacePages(prev => ({
-      ...prev,
-      [workspaceId]: [...(prev[workspaceId] || []), newPage]
-    }));
+    if (renamingItem.type === 'workspace') {
+      onRenameWorkspace(renamingItem.id, renameValue.trim());
+    } else if (renamingItem.type === 'page' && renamingItem.workspaceId) {
+      onRenameWorkspacePage(renamingItem.workspaceId, renamingItem.id, renameValue.trim());
+    }
+    
+    setRenamingItem(null);
+    setRenameValue('');
   };
 
-  const handleDeleteWorkspacePage = (workspaceId: string, pageId: string) => {
-    setWorkspacePages(prev => ({
-      ...prev,
-      [workspaceId]: (prev[workspaceId] || []).filter(p => p.id !== pageId)
-    }));
+  const handleCancelRename = () => {
+    setRenamingItem(null);
+    setRenameValue('');
   };
 
-  const handleWorkspaceSettings = (workspaceId: string) => {
-    console.log('Open settings for workspace:', workspaceId);
+  const handleAddPageToWorkspace = (workspaceId: string, pageType: PageType) => {
+    onAddPageToWorkspace(workspaceId, pageType);
   };
 
   return (
@@ -384,17 +390,38 @@ export function AppSidebar({
                                   )}
                                 </Button>
                               </CollapsibleTrigger>
-                              <SidebarMenuButton
-                                onClick={() => {
-                                  onWorkspaceChange(workspace.id);
-                                  handleMenuClick('workspace-' + workspace.id);
-                                }}
-                                isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
-                                className="flex-1"
-                              >
-                                <Home className="h-4 w-4" />
-                                <span>{workspace.name} Home</span>
-                              </SidebarMenuButton>
+                              {renamingItem?.type === 'workspace' && renamingItem.id === workspace.id ? (
+                                <div className="flex items-center gap-1 flex-1">
+                                  <Input
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveRename();
+                                      if (e.key === 'Escape') handleCancelRename();
+                                    }}
+                                    className="h-7 text-sm"
+                                    autoFocus
+                                  />
+                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <SidebarMenuButton
+                                  onClick={() => {
+                                    onWorkspaceChange(workspace.id);
+                                    handleMenuClick('workspace-' + workspace.id);
+                                  }}
+                                  isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
+                                  className="flex-1"
+                                >
+                                  <Home className="h-4 w-4" />
+                                  <span>{workspace.name} Home</span>
+                                </SidebarMenuButton>
+                              )}
                             </div>
 
                             <CollapsibleContent className="ml-4">
@@ -402,52 +429,75 @@ export function AppSidebar({
                                 {(workspacePages[workspace.id] || []).map((page) => (
                                   <SidebarMenuSubItem key={page.id}>
                                     <div className="group/page flex items-center w-full">
-                                       <SidebarMenuSubButton
-                                        onClick={() => onMenuSelect(page.id, page)}
-                                        isActive={selectedView === page.id}
-                                        className="flex-1"
-                                      >
-                                        <FileText className="h-3 w-3" />
-                                        <span className="text-xs">{page.title}</span>
-                                      </SidebarMenuSubButton>
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
-                                          >
-                                            <MoreHorizontal className="h-3 w-3" />
+                                      {renamingItem?.type === 'page' && renamingItem.id === page.id ? (
+                                        <div className="flex items-center gap-1 flex-1 pl-2">
+                                          <Input
+                                            value={renameValue}
+                                            onChange={(e) => setRenameValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') handleSaveRename();
+                                              if (e.key === 'Escape') handleCancelRename();
+                                            }}
+                                            className="h-6 text-xs"
+                                            autoFocus
+                                          />
+                                          <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleSaveRename}>
+                                            <Check className="h-3 w-3" />
                                           </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-56">
-                                          <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
-                                            <Star className="h-4 w-4 mr-2" />
-                                            Toevoegen aan Favorieten
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem>
-                                            <Link2 className="h-4 w-4 mr-2" />
-                                            Link kopiëren
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem>
-                                            <Copy className="h-4 w-4 mr-2" />
-                                            Dupliceren
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem>
-                                            <FileEdit className="h-4 w-4 mr-2" />
-                                            Naam wijzigen
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem onClick={() => handleDeleteWorkspacePage(workspace.id, page.id)}>
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Verplaatsen naar prullenbak
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem>
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            Een subpagina toevoegen
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
+                                          <Button size="icon" variant="ghost" className="h-5 w-5" onClick={handleCancelRename}>
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <SidebarMenuSubButton
+                                            onClick={() => onMenuSelect(page.id, page)}
+                                            isActive={selectedView === page.id}
+                                            className="flex-1"
+                                          >
+                                            <FileText className="h-3 w-3" />
+                                            <span className="text-xs">{page.title}</span>
+                                          </SidebarMenuSubButton>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
+                                              >
+                                                <MoreHorizontal className="h-3 w-3" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56">
+                                              <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
+                                                <Star className="h-4 w-4 mr-2" />
+                                                Toevoegen aan Favorieten
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem>
+                                                <Link2 className="h-4 w-4 mr-2" />
+                                                Link kopiëren
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem>
+                                                <Copy className="h-4 w-4 mr-2" />
+                                                Dupliceren
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => handleStartRename('page', page.id, page.title, workspace.id)}>
+                                                <FileEdit className="h-4 w-4 mr-2" />
+                                                Naam wijzigen
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem onClick={() => onDeleteWorkspacePage(workspace.id, page.id)}>
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Verplaatsen naar prullenbak
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem>
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Een subpagina toevoegen
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </>
+                                      )}
                                     </div>
                                   </SidebarMenuSubItem>
                                 ))}
@@ -471,9 +521,9 @@ export function AppSidebar({
                                 Toevoegen aan Favorieten
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleWorkspaceSettings(workspace.id)}>
-                                <Settings className="h-4 w-4 mr-2" />
-                                Instellingen voor teamruimte
+                              <DropdownMenuItem onClick={() => handleStartRename('workspace', workspace.id, workspace.name)}>
+                                <FileEdit className="h-4 w-4 mr-2" />
+                                Naam wijzigen
                               </DropdownMenuItem>
                               <DropdownMenuItem>
                                 <Users className="h-4 w-4 mr-2" />
@@ -487,26 +537,12 @@ export function AppSidebar({
                               <DropdownMenuItem>
                                 <Copy className="h-4 w-4 mr-2" />
                                 Teamruimte dupliceren
-                                <div className="ml-auto text-xs text-muted-foreground">
-                                  Dupliceert machtigingen en andere<br />
-                                  instellingen, maar geen pagina's en leden
-                                </div>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                <FolderOpen className="h-4 w-4 mr-2" />
-                                Teamruimte verlaten
+                              <DropdownMenuItem onClick={() => onDeleteWorkspace(workspace.id)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Teamruimte verwijderen
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Database className="h-4 w-4 mr-2" />
-                                Teamruimte archiveren
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                                Laatst bewerkt door Jimmy Koopman
-                                <br />
-                                6 jan 2025, 17:31
-                              </div>
                             </DropdownMenuContent>
                           </DropdownMenu>
 
