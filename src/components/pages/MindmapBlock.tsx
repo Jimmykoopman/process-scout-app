@@ -1,8 +1,15 @@
 import { useState } from 'react';
-import { Maximize2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { JourneyData } from '@/types/journey';
 import { MindmapCanvas } from './MindmapCanvas';
+import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
+import 'reactflow/dist/style.css';
+import CustomNode from '@/components/journey/CustomNode';
+
+const nodeTypes = {
+  custom: CustomNode,
+};
 
 interface MindmapBlockProps {
   data: JourneyData;
@@ -13,6 +20,19 @@ interface MindmapBlockProps {
 
 export const MindmapBlock = ({ data, onChange, title, onTitleChange }: MindmapBlockProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Convert JourneyData to preview nodes
+  const previewNodes = data.stages.map((stage, idx) => ({
+    id: stage.id,
+    type: 'custom',
+    position: { x: idx * 200, y: 100 },
+    data: { 
+      label: stage.label,
+      shape: stage.shape,
+      color: stage.color,
+      textStyle: stage.textStyle,
+    },
+  }));
 
   if (isExpanded) {
     return (
@@ -50,21 +70,29 @@ export const MindmapBlock = ({ data, onChange, title, onTitleChange }: MindmapBl
         className="text-sm font-semibold mb-2 bg-transparent border-0 focus:outline-none focus:ring-0 px-0"
       />
       
-      <div className="relative border rounded-lg overflow-hidden bg-muted/30">
-        {/* Preview message */}
-        <div className="h-64 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">Klik om de mindmap te openen</p>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setIsExpanded(true)}
-              className="shadow-lg"
-            >
-              <Maximize2 className="h-4 w-4 mr-2" />
-              Open mindmap
-            </Button>
-          </div>
+      {/* Preview - clickable to expand */}
+      <div 
+        className="relative border border-border rounded-lg overflow-hidden bg-card hover:bg-accent/5 transition-colors cursor-pointer"
+        onClick={() => setIsExpanded(true)}
+      >
+        <div className="h-64 w-full pointer-events-none">
+          <ReactFlow
+            nodes={previewNodes}
+            edges={[]}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+            minZoom={0.1}
+            maxZoom={1}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            panOnDrag={false}
+            zoomOnScroll={false}
+            preventScrolling={false}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="opacity-30" />
+          </ReactFlow>
         </div>
       </div>
     </div>

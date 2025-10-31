@@ -218,6 +218,15 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     );
   }, [handleAddNodeFromDirection, setNodes]);
 
+  // Center view on nodes whenever they change
+  React.useEffect(() => {
+    if (reactFlowInstance && nodes.length > 0) {
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2, maxZoom: 1, duration: 300 });
+      }, 0);
+    }
+  }, [nodes, reactFlowInstance]);
+
   return (
     <div ref={reactFlowWrapper} className="flex-1 relative">
       <FloatingToolbar
@@ -235,6 +244,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         nodeTypes={nodeTypes}
         onInit={setReactFlowInstance}
         fitView
+        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={2}
       >
