@@ -900,7 +900,16 @@ export const JourneyCanvas = () => {
                           </ReactFlow>
                         </div>
                         
-                        {/* Scrollable Detail Panel */}
+                        {/* Document Editor in center */}
+                        {expandedNode && (
+                          <ExpandedNodeView
+                            node={expandedNode}
+                            open={!!expandedNode}
+                            onClose={() => setExpandedNode(null)}
+                          />
+                        )}
+                        
+                        {/* Detail Panel on right */}
                         {selectedNode && (
                           <DetailPanel
                             node={selectedNode}
@@ -962,12 +971,6 @@ export const JourneyCanvas = () => {
             ) : null}
           </div>
         </div>
-
-        <ExpandedNodeView
-          node={expandedNode}
-          open={expandedNode !== null}
-          onClose={() => setExpandedNode(null)}
-        />
       </div>
     </SidebarProvider>
   );
