@@ -39,6 +39,13 @@ export const DetailPanel = ({
   const [editedLabel, setEditedLabel] = useState('');
   const [showLinkDialog, setShowLinkDialog] = useState(false);
 
+  // useEffect must be called before any early returns
+  React.useEffect(() => {
+    if (node) {
+      setEditedLabel(node.label);
+    }
+  }, [node]);
+
   if (!node) return null;
 
   const textStyle = node.textStyle || { fontSize: 16, fontWeight: 'normal' as const, fontStyle: 'normal' as const };
@@ -75,12 +82,6 @@ export const DetailPanel = ({
       setEditedLabel(node.label);
     }
   };
-
-  React.useEffect(() => {
-    if (node) {
-      setEditedLabel(node.label);
-    }
-  }, [node]);
 
   return (
     <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full">
