@@ -25,7 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { WorkspaceManager } from './WorkspaceManager';
 import { DocumentLibrary } from './DocumentLibrary';
-import { Workspace, Document, WorkspacePage, PageType } from '@/types/journey';
+import { Workspace, Document, WorkspacePage, PageType, Page } from '@/types/journey';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -44,6 +44,10 @@ interface AppSidebarProps {
   onDeleteWorkspacePage: (workspaceId: string, pageId: string) => void;
   onRenameWorkspacePage: (workspaceId: string, pageId: string, newTitle: string) => void;
   onAddPageToWorkspace: (workspaceId: string, pageType: PageType) => void;
+  privatePages: Page[];
+  onAddPrivatePage: (pageType: PageType) => void;
+  onDeletePrivatePage: (pageId: string) => void;
+  onRenamePrivatePage: (pageId: string, newTitle: string) => void;
 }
 
 const mainItems = [
@@ -71,22 +75,20 @@ export function AppSidebar({
   workspacePages,
   onDeleteWorkspacePage,
   onRenameWorkspacePage,
-  onAddPageToWorkspace
+  onAddPageToWorkspace,
+  privatePages,
+  onAddPrivatePage,
+  onDeletePrivatePage,
+  onRenamePrivatePage
 }: AppSidebarProps) {
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
-  const [privateItems, setPrivateItems] = useState<Array<{
-    title: string;
-    icon: any;
-    id: string;
-    subItems?: Array<{ title: string; id: string }>;
-  }>>([]);
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState({
     private: true,
     teams: true,
   });
-  const [renamingItem, setRenamingItem] = useState<{ type: 'workspace' | 'page', id: string, workspaceId?: string } | null>(null);
+  const [renamingItem, setRenamingItem] = useState<{ type: 'workspace' | 'page' | 'private', id: string, workspaceId?: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
   const handleMenuClick = (id: string) => {
@@ -101,23 +103,6 @@ export function AppSidebar({
     }));
   };
 
-  const handleAddTemplate = (templateType: typeof templateTypes[0]) => {
-    const newItem = {
-      ...templateType,
-      id: `${templateType.id}-${Date.now()}`,
-      title: templateType.title,
-    };
-    setPrivateItems([...privateItems, newItem]);
-  };
-
-  const handleDeleteItem = (id: string) => {
-    setPrivateItems(privateItems.filter(item => item.id !== id));
-  };
-
-  const handleAddToFavorites = (id: string) => {
-    console.log('Add to favorites:', id);
-  };
-
   const toggleWorkspace = (workspaceId: string) => {
     setExpandedWorkspaces(prev => ({
       ...prev,
@@ -125,7 +110,11 @@ export function AppSidebar({
     }));
   };
 
-  const handleStartRename = (type: 'workspace' | 'page', id: string, currentName: string, workspaceId?: string) => {
+  const handleAddToFavorites = (id: string) => {
+    console.log('Add to favorites:', id);
+  };
+
+  const handleStartRename = (type: 'workspace' | 'page' | 'private', id: string, currentName: string, workspaceId?: string) => {
     setRenamingItem({ type, id, workspaceId });
     setRenameValue(currentName);
   };
@@ -137,6 +126,8 @@ export function AppSidebar({
       onRenameWorkspace(renamingItem.id, renameValue.trim());
     } else if (renamingItem.type === 'page' && renamingItem.workspaceId) {
       onRenameWorkspacePage(renamingItem.workspaceId, renamingItem.id, renameValue.trim());
+    } else if (renamingItem.type === 'private') {
+      onRenamePrivatePage(renamingItem.id, renameValue.trim());
     }
     
     setRenamingItem(null);
@@ -150,6 +141,16 @@ export function AppSidebar({
 
   const handleAddPageToWorkspace = (workspaceId: string, pageType: PageType) => {
     onAddPageToWorkspace(workspaceId, pageType);
+  };
+
+  const getPageIcon = (type: PageType) => {
+    switch (type) {
+      case 'database': return Database;
+      case 'document': return FileText;
+      case 'mindmap': return Circle;
+      case 'form': return FileEdit;
+      default: return FileText;
+    }
   };
 
   return (
@@ -200,7 +201,7 @@ export function AppSidebar({
         <SidebarSeparator />
 
         {/* Privé */}
-        <Collapsible open={openSections.private} onOpenChange={() => toggleSection('private')}>
+        <Collapsible open={openSections.private} onOpenChange={() => setOpenSections(prev => ({ ...prev, private: !prev.private }))}>
           <SidebarGroup>
             <CollapsibleTrigger className="w-full">
               <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1 group">
@@ -223,7 +224,7 @@ export function AppSidebar({
                       {templateTypes.map((template) => (
                         <DropdownMenuItem
                           key={template.id}
-                          onClick={() => handleAddTemplate(template)}
+                          onClick={() => onAddPrivatePage(template.id as PageType)}
                         >
                           <template.icon className="h-4 w-4 mr-2" />
                           {template.title}
@@ -237,7 +238,7 @@ export function AppSidebar({
                     className="h-5 w-5"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleAddTemplate(templateTypes[0]);
+                      onAddPrivatePage('database');
                     }}
                   >
                     <Plus className="h-3 w-3" />
@@ -248,101 +249,71 @@ export function AppSidebar({
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {privateItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <div className="group flex items-center">
-                        {item.subItems ? (
-                          <Collapsible className="flex-1">
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton 
-                                onClick={() => handleMenuClick(item.id)}
-                                isActive={selectedView === item.id}
-                              >
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.title}</span>
-                                <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]:rotate-90" />
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub>
-                                {item.subItems.map((subItem) => (
-                                  <SidebarMenuSubItem key={subItem.id}>
-                                    <SidebarMenuSubButton 
-                                      onClick={() => handleMenuClick(subItem.id)}
-                                      isActive={selectedView === subItem.id}
-                                    >
-                                      <span className="text-xs">{subItem.title}</span>
-                                    </SidebarMenuSubButton>
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
-                          </Collapsible>
-                        ) : (
-                          <SidebarMenuButton 
-                            onClick={() => handleMenuClick(item.id)}
-                            isActive={selectedView === item.id}
-                            className="flex-1"
-                          >
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </SidebarMenuButton>
-                        )}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <MoreHorizontal className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem onClick={() => handleAddToFavorites(item.id)}>
-                              <Star className="h-4 w-4 mr-2" />
-                              Toevoegen aan Favorieten
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Link2 className="h-4 w-4 mr-2" />
-                              Link kopiëren
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Copy className="h-4 w-4 mr-2" />
-                              Dupliceren
-                              <ChevronRight className="ml-auto h-3 w-3" />
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <FileEdit className="h-4 w-4 mr-2" />
-                              Naam wijzigen
-                              <span className="ml-auto text-xs text-muted-foreground">⌘R</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <FolderOpen className="h-4 w-4 mr-2" />
-                              Verplaatsen naar
-                              <span className="ml-auto text-xs text-muted-foreground">⌘P</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Verplaatsen naar prullenbak
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Open in een nieuw tabblad
-                              <span className="ml-auto text-xs text-muted-foreground">⌘↵</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                              Laatst bewerkt door Jimmy Koopman
-                              <br />
-                              Vandaag om 09:23
+                  {privatePages.map((page) => {
+                    const PageIcon = getPageIcon(page.type as PageType);
+                    return (
+                      <SidebarMenuItem key={page.id}>
+                        <div className="group flex items-center">
+                          {renamingItem?.type === 'private' && renamingItem.id === page.id ? (
+                            <div className="flex items-center gap-1 flex-1">
+                              <Input
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveRename();
+                                  if (e.key === 'Escape') handleCancelRename();
+                                }}
+                                className="h-7 text-sm"
+                                autoFocus
+                              />
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
+                                <X className="h-3 w-3" />
+                              </Button>
                             </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </SidebarMenuItem>
-                  ))}
+                          ) : (
+                            <>
+                              <SidebarMenuButton 
+                                onClick={() => {
+                                  setSelectedView(page.id);
+                                  onMenuSelect(page.id, page as any);
+                                }}
+                                isActive={selectedView === page.id}
+                                className="flex-1"
+                              >
+                                <PageIcon className="h-4 w-4" />
+                                <span>{page.title}</span>
+                              </SidebarMenuButton>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <MoreHorizontal className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem onClick={() => handleStartRename('private', page.id, page.title)}>
+                                    <FileEdit className="h-4 w-4 mr-2" />
+                                    Naam wijzigen
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => onDeletePrivatePage(page.id)}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Verplaatsen naar prullenbak
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </>
+                          )}
+                        </div>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>

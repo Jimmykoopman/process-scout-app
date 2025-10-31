@@ -113,6 +113,7 @@ export interface Page {
   id: string;
   title: string;
   icon?: string;
+  type?: PageType;
   blocks: Block[];
   parentId?: string;
   createdAt: string;

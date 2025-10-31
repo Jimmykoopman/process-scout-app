@@ -533,6 +533,55 @@ export const JourneyCanvas = () => {
     ));
   }, []);
 
+  const handleAddPrivatePage = useCallback((pageType: PageType) => {
+    const typeNames = {
+      mindmap: 'Mindmap',
+      document: 'Document',
+      database: 'Database',
+      form: 'Formulier'
+    };
+    
+    const newPage: Page = {
+      id: `private-${Date.now()}`,
+      title: `Nieuwe ${typeNames[pageType]}`,
+      type: pageType,
+      icon: pageType === 'database' ? '📊' : pageType === 'document' ? '📄' : pageType === 'mindmap' ? '🧠' : '📋',
+      blocks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Initialize empty data for the new page
+    setPageData(prev => ({
+      ...prev,
+      [newPage.id]: pageType === 'mindmap' ? { stages: [] } : (pageType === 'document' ? { blocks: [] } : {})
+    }));
+    
+    setPages(prev => [...prev, newPage]);
+    setSelectedPage(newPage as any);
+    setCurrentView('workspace-page');
+    toast.success(`${typeNames[pageType]} aangemaakt in Privé`);
+  }, []);
+
+  const handleDeletePrivatePage = useCallback((pageId: string) => {
+    setPages(prev => prev.filter(p => p.id !== pageId));
+    if (selectedPage?.id === pageId) {
+      setSelectedPage(null);
+      setCurrentView('home');
+    }
+    toast.success('Pagina verwijderd');
+  }, [selectedPage]);
+
+  const handleRenamePrivatePage = useCallback((pageId: string, newTitle: string) => {
+    setPages(prev => prev.map(p =>
+      p.id === pageId ? { ...p, title: newTitle, updatedAt: new Date().toISOString() } : p
+    ));
+    if (selectedPage?.id === pageId) {
+      setSelectedPage(prev => prev ? { ...prev, title: newTitle } : null);
+    }
+    toast.success('Pagina hernoemd');
+  }, [selectedPage]);
+
   const handleCreatePageInWorkspace = useCallback((type: PageType) => {
     const typeNames = {
       mindmap: 'Mindmap',
@@ -585,6 +634,10 @@ export const JourneyCanvas = () => {
           onDeleteWorkspacePage={handleDeleteWorkspacePage}
           onRenameWorkspacePage={handleRenameWorkspacePage}
           onAddPageToWorkspace={handleAddPageToWorkspace}
+          privatePages={pages}
+          onAddPrivatePage={handleAddPrivatePage}
+          onDeletePrivatePage={handleDeletePrivatePage}
+          onRenamePrivatePage={handleRenamePrivatePage}
         />
         
         <div className="flex-1 flex flex-col">
