@@ -53,13 +53,13 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
 
   return (
     <div className="relative group" onClick={onClick} onDoubleClick={onDoubleClick}>
-      {/* Custom resize handles on the border - follows the shape */}
+      {/* Custom resize handles hidden - use border only */}
       <NodeResizer 
         minWidth={120}
         minHeight={60}
         isVisible={true}
-        lineClassName="!border-transparent"
-        handleClassName="!w-3 !h-3 !bg-primary !rounded-full !border-2 !border-white"
+        lineClassName="!border-primary !border-2 group-hover:!border-primary"
+        handleClassName="!hidden"
       />
       
       <Handle type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />

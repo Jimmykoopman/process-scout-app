@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { JourneyNode, TextStyle } from '@/types/journey';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useRef, useState } from 'react';
 import React from 'react';
 
@@ -105,7 +106,8 @@ export const DetailPanel = ({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          <div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Titel</Label>
             <Input
               value={editedLabel}
               onChange={(e) => handleLabelChange(e.target.value)}
@@ -115,23 +117,25 @@ export const DetailPanel = ({
                   e.currentTarget.blur();
                 }
               }}
-              className="text-2xl font-bold border-0 px-0 focus-visible:ring-0"
-              style={{
-                fontSize: `${textStyle.fontSize}px`,
-                fontWeight: textStyle.fontWeight,
-                fontStyle: textStyle.fontStyle,
-              }}
+              className="text-xl font-semibold"
+              placeholder="Node naam..."
             />
             {node.details && (
-              <p className="text-muted-foreground mt-2">{node.details}</p>
+              <p className="text-muted-foreground text-sm mt-2">{node.details}</p>
             )}
           </div>
 
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Opmaak</CardTitle>
+              <CardDescription className="text-xs">Gebruik deze knoppen om geselecteerde tekst op te maken</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-2">
+                  💡 Tip: Selecteer tekst in de node en klik dan op dikgedrukt of cursief
+                </p>
+              </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   variant={textStyle.fontWeight === 'bold' ? 'default' : 'outline'}
@@ -140,6 +144,7 @@ export const DetailPanel = ({
                     fontWeight: textStyle.fontWeight === 'bold' ? 'normal' : 'bold' 
                   })}
                   className="h-8 w-8 p-0"
+                  title="Dikgedrukt (hele node)"
                 >
                   <Bold className="h-4 w-4" />
                 </Button>
@@ -150,6 +155,7 @@ export const DetailPanel = ({
                     fontStyle: textStyle.fontStyle === 'italic' ? 'normal' : 'italic' 
                   })}
                   className="h-8 w-8 p-0"
+                  title="Cursief (hele node)"
                 >
                   <Italic className="h-4 w-4" />
                 </Button>
