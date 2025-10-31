@@ -590,7 +590,25 @@ export const JourneyCanvas = () => {
         <div className="flex-1 flex flex-col">
           <div className="flex items-center gap-2 p-2 border-b border-border">
             <SidebarTrigger />
-            <h1 className="text-lg font-semibold">Journey Mindmap</h1>
+            <h1 className="text-lg font-semibold">
+              {selectedPage
+                ? selectedPage.title
+                : currentView === 'home'
+                  ? 'Startpagina'
+                  : currentView === 'inbox'
+                    ? 'Inbox'
+                    : currentView === 'database'
+                      ? 'Database'
+                      : currentView === 'pages'
+                        ? "Pagina's"
+                        : currentView === 'documenten'
+                          ? 'Documenten'
+                          : (() => {
+                              const ws = workspaces.find(w => w.id === currentWorkspaceId);
+                              return ws ? `${ws.name} Home` : 'Workspace';
+                            })()
+              }
+            </h1>
           </div>
           
           <div className="flex-1 relative flex flex-col">
