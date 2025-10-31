@@ -24,6 +24,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
 import { PageManager } from '@/components/pages/PageManager';
 import { DocumentLibrary } from './DocumentLibrary';
+import { TemplateSelector } from './TemplateSelector';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
@@ -52,7 +53,7 @@ export const JourneyCanvas = () => {
   });
   
   // View management
-  const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page' | 'template-selector'>('home');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
   const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
@@ -756,6 +757,11 @@ export const JourneyCanvas = () => {
     toast.success('Pagina hernoemd');
   }, [selectedPage]);
 
+  const handleShowTemplateSelector = useCallback(() => {
+    setCurrentView('template-selector');
+    setSelectedPage(null);
+  }, []);
+
   const handleCreatePageInWorkspace = useCallback((type: PageType) => {
     const typeNames = {
       mindmap: 'Mindmap',
@@ -812,6 +818,7 @@ export const JourneyCanvas = () => {
           onAddPrivatePage={handleAddPrivatePage}
           onDeletePrivatePage={handleDeletePrivatePage}
           onRenamePrivatePage={handleRenamePrivatePage}
+          onShowTemplateSelector={handleShowTemplateSelector}
         />
         
         <div className="flex-1 flex flex-col">
@@ -867,10 +874,12 @@ export const JourneyCanvas = () => {
                         ? "Pagina's"
                         : currentView === 'documenten'
                           ? 'Documenten'
-                          : (() => {
-                              const ws = workspaces.find(w => w.id === currentWorkspaceId);
-                              return ws ? ws.name : 'Workspace';
-                            })()
+                          : currentView === 'template-selector'
+                            ? 'Selecteer template'
+                            : (() => {
+                                const ws = workspaces.find(w => w.id === currentWorkspaceId);
+                                return ws ? ws.name : 'Workspace';
+                              })()
                 }
               </h1>
             )}
@@ -897,6 +906,8 @@ export const JourneyCanvas = () => {
               <PageManager />
             ) : currentView === 'documenten' ? (
               <DocumentLibrary documents={documents} onDocumentClick={handleDocumentClick} />
+            ) : currentView === 'template-selector' ? (
+              <TemplateSelector onSelectTemplate={handleCreatePageInWorkspace} />
             ) : currentView === 'workspace-page' ? (
               selectedPage ? (
                 // Show page content based on type
@@ -994,20 +1005,13 @@ export const JourneyCanvas = () => {
                   )}
                 </>
               ) : (
-                // Workspace home - show template selector
-                <>
-                  <Toolbar
-                    mode="workspace"
-                    onCreatePage={handleCreatePageInWorkspace}
-                    onFileUpload={() => toast.info('Upload functionaliteit')}
-                  />
-                  <div className="flex-1 flex items-center justify-center bg-muted/20">
-                    <div className="text-center">
-                      <h2 className="text-2xl font-semibold mb-4">Workspace Home</h2>
-                      <p className="text-muted-foreground">Klik op 'Voeg toe' om een nieuwe pagina aan te maken</p>
-                    </div>
+                // Workspace home - no toolbar, just empty state
+                <div className="flex-1 flex items-center justify-center bg-muted/20">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-semibold mb-4">Workspace</h2>
+                    <p className="text-muted-foreground">Klik op het plus icoon in de sidebar om een pagina toe te voegen</p>
                   </div>
-                </>
+                </div>
               )
             ) : null}
           </div>

@@ -48,6 +48,7 @@ interface AppSidebarProps {
   onAddPrivatePage: (pageType: PageType) => void;
   onDeletePrivatePage: (pageId: string) => void;
   onRenamePrivatePage: (pageId: string, newTitle: string) => void;
+  onShowTemplateSelector: () => void;
 }
 
 const mainItems = [
@@ -79,7 +80,8 @@ export function AppSidebar({
   privatePages,
   onAddPrivatePage,
   onDeletePrivatePage,
-  onRenamePrivatePage
+  onRenamePrivatePage,
+  onShowTemplateSelector
 }: AppSidebarProps) {
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -214,31 +216,13 @@ export function AppSidebar({
                   <span className="text-xs font-medium text-muted-foreground">Privé</span>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-5 w-5">
-                        <MoreHorizontal className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      {templateTypes.map((template) => (
-                        <DropdownMenuItem
-                          key={template.id}
-                          onClick={() => onAddPrivatePage(template.id as PageType)}
-                        >
-                          <template.icon className="h-4 w-4 mr-2" />
-                          {template.title}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-5 w-5"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddPrivatePage('database');
+                      onShowTemplateSelector();
                     }}
                   >
                     <Plus className="h-3 w-3" />
@@ -517,36 +501,17 @@ export function AppSidebar({
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'document')}>
-                                <FileText className="h-4 w-4 mr-2" />
-                                Document
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'mindmap')}>
-                                <Circle className="h-4 w-4 mr-2" />
-                                Mindmap
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'database')}>
-                                <Database className="h-4 w-4 mr-2" />
-                                Database
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'form')}>
-                                <FileEdit className="h-4 w-4 mr-2" />
-                                Formulier
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onShowTemplateSelector();
+                            }}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
                       </SidebarMenuItem>
                     </div>
