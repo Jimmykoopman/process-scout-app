@@ -34,6 +34,9 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
   const [expandedNode, setExpandedNode] = useState<JourneyNode | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 5000, height: 5000 }); // 500x500 grid units (10px per unit)
+  const GRID_UNIT = 10; // pixels per grid unit
+  const MARGIN = 1000; // 100 grid units margin (100 * 10px)
 
   // Convert JourneyData to ReactFlow nodes and edges
   const convertToReactFlow = useCallback((journeyData: JourneyData, nodeClickHandler?: (node: JourneyNode) => void) => {
@@ -218,14 +221,50 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     );
   }, [handleAddNodeFromDirection, setNodes]);
 
-  // Center view on nodes whenever they change
+  // Fit view only on initial load
   React.useEffect(() => {
     if (reactFlowInstance && nodes.length > 0) {
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.2, maxZoom: 1, duration: 300 });
-      }, 0);
+      const hasInitialized = reactFlowWrapper.current?.dataset.initialized;
+      if (!hasInitialized) {
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.2, maxZoom: 1, duration: 300 });
+          if (reactFlowWrapper.current) {
+            reactFlowWrapper.current.dataset.initialized = 'true';
+          }
+        }, 0);
+      }
     }
-  }, [nodes, reactFlowInstance]);
+  }, [reactFlowInstance]);
+
+  // Dynamically expand canvas when nodes approach edges
+  React.useEffect(() => {
+    if (nodes.length === 0) return;
+
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    nodes.forEach(node => {
+      const nodeWidth = 150; // approximate node width
+      const nodeHeight = 100; // approximate node height
+      
+      minX = Math.min(minX, node.position.x);
+      maxX = Math.max(maxX, node.position.x + nodeWidth);
+      minY = Math.min(minY, node.position.y);
+      maxY = Math.max(maxY, node.position.y + nodeHeight);
+    });
+
+    // Calculate required canvas size with margin
+    const requiredWidth = Math.max(5000, (maxX - minX) + (MARGIN * 2));
+    const requiredHeight = Math.max(5000, (maxY - minY) + (MARGIN * 2));
+
+    // Update canvas size if needed
+    if (requiredWidth > canvasSize.width || requiredHeight > canvasSize.height) {
+      setCanvasSize({
+        width: Math.max(requiredWidth, canvasSize.width),
+        height: Math.max(requiredHeight, canvasSize.height)
+      });
+    }
+  }, [nodes, canvasSize, MARGIN]);
 
   return (
     <div ref={reactFlowWrapper} className="flex-1 relative">
@@ -243,12 +282,22 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         onInit={setReactFlowInstance}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={2}
+        panOnScroll
+        panOnDrag
+        selectionOnDrag={false}
+        translateExtent={[
+          [-canvasSize.width / 2, -canvasSize.height / 2],
+          [canvasSize.width, canvasSize.height]
+        ]}
       >
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={GRID_UNIT} 
+          size={1}
+          style={{ width: canvasSize.width, height: canvasSize.height }}
+        />
         <Controls />
         <MiniMap />
       </ReactFlow>
