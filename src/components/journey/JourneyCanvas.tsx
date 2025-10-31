@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -65,6 +65,20 @@ export const JourneyCanvas = () => {
   const journeyData = pageData[getCurrentPageKey()] || { stages: [] };
   const stages: JourneyNode[] = Array.isArray(journeyData?.stages) ? journeyData.stages : [];
 
+  // Handler functions defined first
+  const handleNodeClick = useCallback((node: JourneyNode, parentBreadcrumbs: JourneyNode[] = []) => {
+    setSelectedNode(node);
+    setBreadcrumbs([...parentBreadcrumbs, node]);
+    // Don't automatically open expanded view
+  }, []);
+
+  const handleNodeDoubleClick = useCallback((node: JourneyNode) => {
+    // Open first link if available
+    if (node.links && node.links.length > 0) {
+      window.open(node.links[0].url, '_blank');
+    }
+  }, []);
+
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
     const nodes: Node[] = [];
@@ -87,7 +101,7 @@ export const JourneyCanvas = () => {
           textStyle: stage.textStyle,
           onClick: () => handleNodeClick(stage),
           onDoubleClick: () => handleNodeDoubleClick(stage),
-          onAddNodeDirection: handleAddNodeFromDirection,
+          onAddNodeDirection: undefined, // Will be set later
         },
       });
 
@@ -104,7 +118,7 @@ export const JourneyCanvas = () => {
               textStyle: child.textStyle,
               onClick: () => handleNodeClick(child, [stage]),
               onDoubleClick: () => handleNodeDoubleClick(child),
-              onAddNodeDirection: handleAddNodeFromDirection,
+              onAddNodeDirection: undefined, // Will be set later
             },
           });
         });
@@ -112,7 +126,7 @@ export const JourneyCanvas = () => {
     });
 
     return nodes;
-  }, [stages]);
+  }, [stages, handleNodeClick, handleNodeDoubleClick]);
 
   const createEdgesFromData = useCallback(() => {
     const edges: Edge[] = [];
@@ -156,19 +170,6 @@ export const JourneyCanvas = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(createNodesFromData());
   const [edges, setEdges, onEdgesChange] = useEdgesState(createEdgesFromData());
-
-  const handleNodeClick = useCallback((node: JourneyNode, parentBreadcrumbs: JourneyNode[] = []) => {
-    setSelectedNode(node);
-    setBreadcrumbs([...parentBreadcrumbs, node]);
-    // Don't automatically open expanded view
-  }, []);
-
-  const handleNodeDoubleClick = useCallback((node: JourneyNode) => {
-    // Open first link if available
-    if (node.links && node.links.length > 0) {
-      window.open(node.links[0].url, '_blank');
-    }
-  }, []);
 
   const handleChildClick = useCallback((child: JourneyNode) => {
     setSelectedNode(child);
@@ -307,7 +308,7 @@ export const JourneyCanvas = () => {
     };
     setNodes((nds) => [...nds, newNode]);
     toast.success('Node toegevoegd');
-  }, [selectedShape, setNodes, selectedPage]);
+  }, [selectedShape, setNodes, selectedPage, handleNodeClick, handleNodeDoubleClick]);
 
   const handleAddNodeFromDirection = useCallback((sourceNodeId: string, direction: 'left' | 'right' | 'top' | 'bottom') => {
     const pageKey = getCurrentPageKey();
@@ -348,19 +349,22 @@ export const JourneyCanvas = () => {
       }
     }));
 
-    // Add to React Flow
-    const newNode: Node = {
-      id: newJourneyNode.id,
-      type: 'custom',
-      position: newPosition,
-      data: {
-        label: newJourneyNode.label,
-        shape: newJourneyNode.shape,
-        color: newJourneyNode.color,
-        onClick: () => handleNodeClick(newJourneyNode),
-        onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
-        onAddNodeDirection: handleAddNodeFromDirection,
-      },
+    // Add to React Flow - reference to self through callback
+    const createNodeWithCallback = () => {
+      const newNode: Node = {
+        id: newJourneyNode.id,
+        type: 'custom',
+        position: newPosition,
+        data: {
+          label: newJourneyNode.label,
+          shape: newJourneyNode.shape,
+          color: newJourneyNode.color,
+          onClick: () => handleNodeClick(newJourneyNode),
+          onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
+          onAddNodeDirection: handleAddNodeFromDirection,
+        },
+      };
+      return newNode;
     };
 
     // Create edge between nodes
@@ -375,10 +379,23 @@ export const JourneyCanvas = () => {
       style: { stroke: '#0891B2', strokeWidth: 2 },
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    setNodes((nds) => [...nds, createNodeWithCallback()]);
     setEdges((eds) => [...eds, newEdge]);
     toast.success('Node toegevoegd');
-  }, [nodes, setNodes, setEdges, selectedPage]);
+  }, [nodes, setNodes, setEdges, selectedPage, handleNodeClick, handleNodeDoubleClick]);
+
+  // Update existing nodes with the handleAddNodeFromDirection callback
+  React.useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onAddNodeDirection: handleAddNodeFromDirection,
+        },
+      }))
+    );
+  }, [handleAddNodeFromDirection, setNodes]);
 
   const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
     const pageKey = getCurrentPageKey();
