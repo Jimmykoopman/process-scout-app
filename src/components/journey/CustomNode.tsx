@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
+import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { NodeShape, TextStyle } from '@/types/journey';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -17,7 +17,7 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
   const { label, shape, color, textStyle, onClick, onDoubleClick, onAddNodeDirection } = data;
 
   const getShapeClasses = () => {
-    const base = 'flex items-center justify-center min-w-[120px] min-h-[60px] px-4 py-3 bg-node-bg border-2 border-node-border shadow-lg cursor-pointer transition-all hover:shadow-xl hover:scale-105 text-sm font-medium text-foreground';
+    const base = 'flex items-center justify-center min-w-[120px] min-h-[60px] max-w-[200px] px-4 py-3 bg-node-bg border-2 border-node-border shadow-lg cursor-pointer transition-all hover:shadow-xl text-sm font-medium text-foreground';
     
     switch (shape) {
       case 'circle':
@@ -38,7 +38,13 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
     fontSize: `${textStyle.fontSize}px`,
     fontWeight: textStyle.fontWeight,
     fontStyle: textStyle.fontStyle,
-  } : {};
+    wordBreak: 'break-word' as const,
+    textAlign: 'center' as const,
+    hyphens: 'auto' as const,
+  } : {
+    wordBreak: 'break-word' as const,
+    textAlign: 'center' as const,
+  };
 
   const handleDirectionClick = (e: React.MouseEvent, direction: 'left' | 'right' | 'top' | 'bottom') => {
     e.stopPropagation();
@@ -47,7 +53,18 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
 
   return (
     <div className="relative group" onClick={onClick} onDoubleClick={onDoubleClick}>
-      <Handle type="target" position={Position.Left} className="w-3 h-3" />
+      <NodeResizer 
+        minWidth={120}
+        minHeight={60}
+        isVisible={true}
+        lineClassName="!border-primary"
+        handleClassName="!w-2 !h-2 !bg-primary"
+      />
+      
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !top-0" />
+      <Handle type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0" />
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !left-0" />
+      <Handle type="target" position={Position.Right} className="w-3 h-3 !right-0" />
       
       {/* Direction arrows - only visible on hover */}
       <button
@@ -86,12 +103,18 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
         className={getShapeClasses()} 
         style={{ 
           borderColor: color || undefined,
-          boxShadow: color ? `0 4px 20px ${color}40` : undefined 
+          boxShadow: color ? `0 4px 20px ${color}40` : undefined,
+          width: '100%',
+          height: '100%',
         }}
       >
         <span className={labelClasses} style={labelStyle}>{label}</span>
       </div>
-      <Handle type="source" position={Position.Right} className="w-3 h-3" />
+      
+      <Handle type="source" position={Position.Top} className="w-3 h-3 !top-0" />
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bottom-0" />
+      <Handle type="source" position={Position.Left} className="w-3 h-3 !left-0" />
+      <Handle type="source" position={Position.Right} className="w-3 h-3 !right-0" />
     </div>
   );
 });

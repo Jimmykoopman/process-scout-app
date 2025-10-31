@@ -281,6 +281,7 @@ export const JourneyCanvas = () => {
       label: 'Nieuwe node',
       shape: selectedShape,
       color: '#0891B2',
+      textStyle: { fontSize: 16, fontWeight: 'normal', fontStyle: 'normal' },
     };
 
     // Add to journey data
@@ -301,6 +302,7 @@ export const JourneyCanvas = () => {
         label: newJourneyNode.label,
         shape: newJourneyNode.shape,
         color: newJourneyNode.color,
+        textStyle: newJourneyNode.textStyle,
         onClick: () => handleNodeClick(newJourneyNode),
         onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
         onAddNodeDirection: handleAddNodeFromDirection,
@@ -338,6 +340,7 @@ export const JourneyCanvas = () => {
       label: 'Nieuwe node',
       shape: 'circle',
       color: '#0891B2',
+      textStyle: { fontSize: 16, fontWeight: 'normal', fontStyle: 'normal' },
     };
 
     // Add to journey data
@@ -359,6 +362,7 @@ export const JourneyCanvas = () => {
           label: newJourneyNode.label,
           shape: newJourneyNode.shape,
           color: newJourneyNode.color,
+          textStyle: newJourneyNode.textStyle,
           onClick: () => handleNodeClick(newJourneyNode),
           onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
           onAddNodeDirection: handleAddNodeFromDirection,
@@ -472,8 +476,23 @@ export const JourneyCanvas = () => {
       ...prev,
       [pageKey]: { ...prev[pageKey], stages: updateNodeStyle(prev[pageKey]?.stages || []) }
     }));
+    
+    // Update React Flow nodes to show the change immediately
+    setNodes(nodes => nodes.map(node => {
+      if (node.id === nodeId) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            textStyle: { ...node.data.textStyle, ...style } as TextStyle
+          }
+        };
+      }
+      return node;
+    }));
+    
     toast.success('Tekst formatting bijgewerkt');
-  }, [selectedPage]);
+  }, [selectedPage, setNodes]);
 
   const handleLinkAdd = useCallback((nodeId: string, url: string, label: string) => {
     const pageKey = getCurrentPageKey();
