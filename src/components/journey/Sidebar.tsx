@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet } from 'lucide-react';
+import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,14 @@ import {
   SidebarSeparator,
   SidebarHeader,
 } from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { WorkspaceManager } from './WorkspaceManager';
 import { DocumentLibrary } from './DocumentLibrary';
 import { Workspace, Document } from '@/types/journey';
@@ -34,31 +42,14 @@ interface AppSidebarProps {
 
 const mainItems = [
   { title: 'Startpagina', icon: Home, id: 'home' },
-  { title: 'Meetings', icon: Users, id: 'meetings' },
-  { title: 'Notion AI', icon: Star, id: 'notion-ai' },
   { title: 'Inbox', icon: FileText, id: 'inbox', badge: 2 },
 ];
 
-const favoriteItems = [
-  { title: 'Departments', icon: Users, id: 'departments' },
-  { title: 'All tasks', icon: CheckSquare, id: 'all-tasks' },
-];
-
-const privateItems = [
+const templateTypes = [
   { title: 'Nieuwe database', icon: Database, id: 'database' },
-  { 
-    title: 'Takentracker', 
-    icon: CheckSquare, 
-    id: 'takentracker',
-    subItems: [
-      { title: 'Alle taken', id: 'alle-taken' },
-      { title: 'Op status', id: 'op-status' },
-      { title: 'Mijn taken', id: 'mijn-taken' },
-    ]
-  },
-  { title: 'Nieuw formulier', icon: FileEdit, id: 'nieuw-formulier' },
-  { title: 'Nieuwe database', icon: FileSpreadsheet, id: 'nieuwe-database' },
-  { title: 'Kladblok', icon: PenTool, id: 'kladblok' },
+  { title: 'Nieuwe pagina', icon: FileText, id: 'page' },
+  { title: 'Nieuw formulier', icon: FileEdit, id: 'form' },
+  { title: 'Kladblok', icon: PenTool, id: 'note' },
 ];
 
 export function AppSidebar({ 
@@ -72,8 +63,13 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
+  const [privateItems, setPrivateItems] = useState<Array<{
+    title: string;
+    icon: any;
+    id: string;
+    subItems?: Array<{ title: string; id: string }>;
+  }>>([]);
   const [openSections, setOpenSections] = useState({
-    favorites: true,
     private: true,
     teams: true,
   });
@@ -83,11 +79,29 @@ export function AppSidebar({
     onMenuSelect(id);
   };
 
-  const toggleSection = (section: 'favorites' | 'private' | 'teams') => {
+  const toggleSection = (section: 'private' | 'teams') => {
     setOpenSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleAddTemplate = (templateType: typeof templateTypes[0]) => {
+    const newItem = {
+      ...templateType,
+      id: `${templateType.id}-${Date.now()}`,
+      title: templateType.title,
+    };
+    setPrivateItems([...privateItems, newItem]);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setPrivateItems(privateItems.filter(item => item.id !== id));
+  };
+
+  const handleAddToFavorites = (id: string) => {
+    // Placeholder for favorite functionality
+    console.log('Add to favorites:', id);
   };
 
   return (
@@ -137,50 +151,50 @@ export function AppSidebar({
 
         <SidebarSeparator />
 
-        {/* Favorieten */}
-        <Collapsible open={openSections.favorites} onOpenChange={() => toggleSection('favorites')}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="w-full">
-              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1">
-                <span className="text-xs font-medium text-muted-foreground">Favorieten</span>
-                {openSections.favorites ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {favoriteItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton 
-                        onClick={() => handleMenuClick(item.id)}
-                        isActive={selectedView === item.id}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
         {/* Privé */}
         <Collapsible open={openSections.private} onOpenChange={() => toggleSection('private')}>
           <SidebarGroup>
             <CollapsibleTrigger className="w-full">
-              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1">
-                <span className="text-xs font-medium text-muted-foreground">Privé</span>
-                {openSections.private ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
+              <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-sidebar-accent/50 rounded-md px-2 py-1 group">
+                <div className="flex items-center gap-2">
+                  {openSections.private ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                  <span className="text-xs font-medium text-muted-foreground">Privé</span>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {templateTypes.map((template) => (
+                        <DropdownMenuItem
+                          key={template.id}
+                          onClick={() => handleAddTemplate(template)}
+                        >
+                          <template.icon className="h-4 w-4 mr-2" />
+                          {template.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddTemplate(templateTypes[0]);
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </SidebarGroupLabel>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -188,42 +202,97 @@ export function AppSidebar({
                 <SidebarMenu>
                   {privateItems.map((item) => (
                     <SidebarMenuItem key={item.id}>
-                      {item.subItems ? (
-                        <Collapsible>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton 
-                              onClick={() => handleMenuClick(item.id)}
-                              isActive={selectedView === item.id}
+                      <div className="group flex items-center">
+                        {item.subItems ? (
+                          <Collapsible className="flex-1">
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton 
+                                onClick={() => handleMenuClick(item.id)}
+                                isActive={selectedView === item.id}
+                              >
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                                <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]:rotate-90" />
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                {item.subItems.map((subItem) => (
+                                  <SidebarMenuSubItem key={subItem.id}>
+                                    <SidebarMenuSubButton 
+                                      onClick={() => handleMenuClick(subItem.id)}
+                                      isActive={selectedView === subItem.id}
+                                    >
+                                      <span className="text-xs">{subItem.title}</span>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ) : (
+                          <SidebarMenuButton 
+                            onClick={() => handleMenuClick(item.id)}
+                            isActive={selectedView === item.id}
+                            className="flex-1"
+                          >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </SidebarMenuButton>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <item.icon className="h-4 w-4" />
-                              <span>{item.title}</span>
-                              <ChevronRight className="ml-auto h-3 w-3 transition-transform group-data-[state=open]:rotate-90" />
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              {item.subItems.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.id}>
-                                  <SidebarMenuSubButton 
-                                    onClick={() => handleMenuClick(subItem.id)}
-                                    isActive={selectedView === subItem.id}
-                                  >
-                                    <span className="text-xs">{subItem.title}</span>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ) : (
-                        <SidebarMenuButton 
-                          onClick={() => handleMenuClick(item.id)}
-                          isActive={selectedView === item.id}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
-                      )}
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => handleAddToFavorites(item.id)}>
+                              <Star className="h-4 w-4 mr-2" />
+                              Toevoegen aan Favorieten
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Link2 className="h-4 w-4 mr-2" />
+                              Link kopiëren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Dupliceren
+                              <ChevronRight className="ml-auto h-3 w-3" />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FileEdit className="h-4 w-4 mr-2" />
+                              Naam wijzigen
+                              <span className="ml-auto text-xs text-muted-foreground">⌘R</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FolderOpen className="h-4 w-4 mr-2" />
+                              Verplaatsen naar
+                              <span className="ml-auto text-xs text-muted-foreground">⌘P</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Verplaatsen naar prullenbak
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Open in een nieuw tabblad
+                              <span className="ml-auto text-xs text-muted-foreground">⌘↵</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                              Laatst bewerkt door Jimmy Koopman
+                              <br />
+                              Vandaag om 09:23
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
