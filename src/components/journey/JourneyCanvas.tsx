@@ -38,7 +38,7 @@ export const JourneyCanvas = () => {
   
   // Workspace management
   const [workspaces, setWorkspaces] = useState<Workspace[]>([
-    { id: 'default', name: 'Klant Reis', type: 'mindmap', data: sampleJourneyData }
+    { id: 'default', name: 'Klant Reis', type: 'mindmap', data: { stages: [] } }
   ]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState('default');
   
@@ -47,7 +47,7 @@ export const JourneyCanvas = () => {
   
   // Journey nodes with text styles and links - per page
   const [pageData, setPageData] = useState<Record<string, any>>({
-    'default': sampleJourneyData
+    'default': { stages: [] }
   });
   
   // View management
