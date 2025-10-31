@@ -53,18 +53,19 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
 
   return (
     <div className="relative group" onClick={onClick} onDoubleClick={onDoubleClick}>
+      {/* Custom resize handles on the border - follows the shape */}
       <NodeResizer 
         minWidth={120}
         minHeight={60}
         isVisible={true}
-        lineClassName="!border-primary"
-        handleClassName="!w-2 !h-2 !bg-primary"
+        lineClassName="!border-transparent"
+        handleClassName="!w-3 !h-3 !bg-primary !rounded-full !border-2 !border-white"
       />
       
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !top-0" />
-      <Handle type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0" />
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !left-0" />
-      <Handle type="target" position={Position.Right} className="w-3 h-3 !right-0" />
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
+      <Handle type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
+      <Handle type="target" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
       
       {/* Direction arrows - only visible on hover */}
       <button
@@ -111,10 +112,10 @@ const CustomNode = memo(({ data, id }: NodeProps<CustomNodeData>) => {
         <span className={labelClasses} style={labelStyle}>{label}</span>
       </div>
       
-      <Handle type="source" position={Position.Top} className="w-3 h-3 !top-0" />
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bottom-0" />
-      <Handle type="source" position={Position.Left} className="w-3 h-3 !left-0" />
-      <Handle type="source" position={Position.Right} className="w-3 h-3 !right-0" />
+      <Handle type="source" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
+      <Handle type="source" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
+      <Handle type="source" position={Position.Right} className="w-3 h-3 !right-0 opacity-0" />
     </div>
   );
 });

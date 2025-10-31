@@ -292,8 +292,6 @@ export const DetailPanel = ({
                 }}
               >
                 <div className="p-6 space-y-4" style={{ fontSize: '11px' }}>
-                  <h3 className="font-bold text-lg" style={{ fontSize: '16px' }}>{node.label}</h3>
-                  
                   {node.details && (
                     <div>
                       <h4 className="font-semibold mb-1" style={{ fontSize: '13px' }}>Details</h4>
@@ -338,6 +336,14 @@ export const DetailPanel = ({
                         ))}
                       </ul>
                     </div>
+                  )}
+                  
+                  {!node.details && (!node.links || node.links.length === 0) && 
+                   (!node.children || node.children.length === 0) && 
+                   (!node.documents || node.documents.length === 0) && (
+                    <p className="text-muted-foreground text-center py-12">
+                      Document is leeg. Voeg inhoud toe via links, onderdelen of documenten.
+                    </p>
                   )}
                 </div>
               </div>
