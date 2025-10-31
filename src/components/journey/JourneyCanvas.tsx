@@ -1072,8 +1072,9 @@ export const JourneyCanvas = () => {
           activePageId={selectedPage?.id}
         />
         
-        <div className="flex-1 flex flex-col">
-          <div className="flex items-center gap-2 p-2 border-b border-border">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Fixed header - always visible */}
+          <div className="flex-shrink-0 flex items-center gap-2 p-3 border-b border-border bg-card z-10">
             {selectedPage ? (
               editingTitle ? (
                 <Input
