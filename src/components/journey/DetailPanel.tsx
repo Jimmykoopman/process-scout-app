@@ -1,4 +1,4 @@
-import { X, ChevronRight, FileText, Upload, Link as LinkIcon, Plus, Trash2, Pencil, Check } from 'lucide-react';
+import { X, ChevronRight, FileText, Upload, Link as LinkIcon, Plus, Trash2, Pencil, Check, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { JourneyNode, TextStyle } from '@/types/journey';
@@ -18,6 +18,7 @@ interface DetailPanelProps {
   onTextStyleChange?: (nodeId: string, style: Partial<TextStyle>) => void;
   onLinkAdd?: (nodeId: string, url: string, label: string) => void;
   onLinkRemove?: (nodeId: string, linkId: string) => void;
+  onExpandDocument?: () => void;
 }
 
 export const DetailPanel = ({ 
@@ -29,7 +30,8 @@ export const DetailPanel = ({
   onNodeLabelChange,
   onTextStyleChange,
   onLinkAdd,
-  onLinkRemove 
+  onLinkRemove,
+  onExpandDocument 
 }: DetailPanelProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newLinkUrl, setNewLinkUrl] = useState('');
@@ -240,6 +242,63 @@ export const DetailPanel = ({
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Document Preview</CardTitle>
+              <CardDescription>Inhoud van deze node</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Preview of node content */}
+              <div className="border border-border rounded-lg p-4 bg-muted/20 max-h-[300px] overflow-auto">
+                <h3 className="font-semibold mb-2">{node.label}</h3>
+                {node.details && (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mb-3">{node.details}</p>
+                )}
+                
+                {node.links && node.links.length > 0 && (
+                  <div className="mb-3">
+                    <h4 className="text-sm font-medium mb-1">Links:</h4>
+                    <ul className="space-y-1">
+                      {node.links.slice(0, 3).map((link) => (
+                        <li key={link.id} className="text-xs text-muted-foreground truncate">
+                          • {link.label || link.url}
+                        </li>
+                      ))}
+                      {node.links.length > 3 && (
+                        <li className="text-xs text-muted-foreground">... en {node.links.length - 3} meer</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                
+                {node.children && node.children.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Onderdelen:</h4>
+                    <ul className="space-y-1">
+                      {node.children.slice(0, 3).map((child) => (
+                        <li key={child.id} className="text-xs text-muted-foreground">
+                          • {child.label}
+                        </li>
+                      ))}
+                      {node.children.length > 3 && (
+                        <li className="text-xs text-muted-foreground">... en {node.children.length - 3} meer</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full justify-center gap-2"
+                onClick={onExpandDocument}
+              >
+                <Maximize2 className="w-4 h-4" />
+                <span>Vergroot naar volledig scherm</span>
+              </Button>
             </CardContent>
           </Card>
 

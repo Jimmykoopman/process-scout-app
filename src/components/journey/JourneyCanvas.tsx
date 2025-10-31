@@ -87,6 +87,7 @@ export const JourneyCanvas = () => {
           textStyle: stage.textStyle,
           onClick: () => handleNodeClick(stage),
           onDoubleClick: () => handleNodeDoubleClick(stage),
+          onAddNodeDirection: handleAddNodeFromDirection,
         },
       });
 
@@ -103,6 +104,7 @@ export const JourneyCanvas = () => {
               textStyle: child.textStyle,
               onClick: () => handleNodeClick(child, [stage]),
               onDoubleClick: () => handleNodeDoubleClick(child),
+              onAddNodeDirection: handleAddNodeFromDirection,
             },
           });
         });
@@ -158,7 +160,7 @@ export const JourneyCanvas = () => {
   const handleNodeClick = useCallback((node: JourneyNode, parentBreadcrumbs: JourneyNode[] = []) => {
     setSelectedNode(node);
     setBreadcrumbs([...parentBreadcrumbs, node]);
-    setExpandedNode(node);
+    // Don't automatically open expanded view
   }, []);
 
   const handleNodeDoubleClick = useCallback((node: JourneyNode) => {
@@ -181,6 +183,51 @@ export const JourneyCanvas = () => {
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
+  );
+
+  const onNodeDrag = useCallback(
+    (_event: any, node: Node) => {
+      const draggedNode = node;
+      const snapDistance = 50; // Distance to trigger snap
+      
+      // Find connected nodes
+      const connectedNodeIds = new Set<string>();
+      edges.forEach(edge => {
+        if (edge.source === draggedNode.id) connectedNodeIds.add(edge.target);
+        if (edge.target === draggedNode.id) connectedNodeIds.add(edge.source);
+      });
+
+      // Check for horizontal/vertical alignment with connected nodes
+      nodes.forEach((n) => {
+        if (n.id !== draggedNode.id && connectedNodeIds.has(n.id)) {
+          const dx = Math.abs(n.position.x - draggedNode.position.x);
+          const dy = Math.abs(n.position.y - draggedNode.position.y);
+
+          // Snap horizontally (same Y)
+          if (dy < snapDistance && dx > snapDistance) {
+            setNodes((nds) =>
+              nds.map((nd) =>
+                nd.id === draggedNode.id
+                  ? { ...nd, position: { ...nd.position, y: n.position.y } }
+                  : nd
+              )
+            );
+          }
+
+          // Snap vertically (same X)
+          if (dx < snapDistance && dy > snapDistance) {
+            setNodes((nds) =>
+              nds.map((nd) =>
+                nd.id === draggedNode.id
+                  ? { ...nd, position: { ...nd.position, x: n.position.x } }
+                  : nd
+              )
+            );
+          }
+        }
+      });
+    },
+    [nodes, edges, setNodes]
   );
 
   const onNodeDragStop = useCallback(
@@ -255,11 +302,83 @@ export const JourneyCanvas = () => {
         color: newJourneyNode.color,
         onClick: () => handleNodeClick(newJourneyNode),
         onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
+        onAddNodeDirection: handleAddNodeFromDirection,
       },
     };
     setNodes((nds) => [...nds, newNode]);
     toast.success('Node toegevoegd');
   }, [selectedShape, setNodes, selectedPage]);
+
+  const handleAddNodeFromDirection = useCallback((sourceNodeId: string, direction: 'left' | 'right' | 'top' | 'bottom') => {
+    const pageKey = getCurrentPageKey();
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+
+    const offset = 250;
+    let newPosition = { ...sourceNode.position };
+    
+    switch (direction) {
+      case 'left':
+        newPosition.x -= offset;
+        break;
+      case 'right':
+        newPosition.x += offset;
+        break;
+      case 'top':
+        newPosition.y -= offset;
+        break;
+      case 'bottom':
+        newPosition.y += offset;
+        break;
+    }
+
+    const newJourneyNode: JourneyNode = {
+      id: `node-${Date.now()}`,
+      label: 'Nieuwe node',
+      shape: 'circle',
+      color: '#0891B2',
+    };
+
+    // Add to journey data
+    setPageData(prev => ({
+      ...prev,
+      [pageKey]: {
+        ...prev[pageKey],
+        stages: [...(prev[pageKey]?.stages || []), newJourneyNode]
+      }
+    }));
+
+    // Add to React Flow
+    const newNode: Node = {
+      id: newJourneyNode.id,
+      type: 'custom',
+      position: newPosition,
+      data: {
+        label: newJourneyNode.label,
+        shape: newJourneyNode.shape,
+        color: newJourneyNode.color,
+        onClick: () => handleNodeClick(newJourneyNode),
+        onDoubleClick: () => handleNodeDoubleClick(newJourneyNode),
+        onAddNodeDirection: handleAddNodeFromDirection,
+      },
+    };
+
+    // Create edge between nodes
+    const newEdge: Edge = {
+      id: `e${sourceNodeId}-${newJourneyNode.id}`,
+      source: sourceNodeId,
+      target: newJourneyNode.id,
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+      },
+      style: { stroke: '#0891B2', strokeWidth: 2 },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => [...eds, newEdge]);
+    toast.success('Node toegevoegd');
+  }, [nodes, setNodes, setEdges, selectedPage]);
 
   const handleDocumentUpload = useCallback((nodeId: string, files: FileList) => {
     const pageKey = getCurrentPageKey();
@@ -712,6 +831,7 @@ export const JourneyCanvas = () => {
                             onNodesChange={onNodesChange}
                             onEdgesChange={onEdgesChange}
                             onConnect={onConnect}
+                            onNodeDrag={onNodeDrag}
                             onNodeDragStop={onNodeDragStop}
                             nodeTypes={nodeTypes}
                             fitView
@@ -738,6 +858,7 @@ export const JourneyCanvas = () => {
                           onTextStyleChange={handleTextStyleChange}
                           onLinkAdd={handleLinkAdd}
                           onLinkRemove={handleLinkRemove}
+                          onExpandDocument={() => setExpandedNode(selectedNode)}
                         />
                       </div>
                     </>
