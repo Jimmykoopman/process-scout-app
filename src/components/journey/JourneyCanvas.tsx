@@ -613,7 +613,7 @@ export const JourneyCanvas = () => {
     toast.success('Pagina hernoemd');
   }, [selectedPage]);
 
-  const handleAddPageToWorkspace = useCallback((workspaceId: string, pageType: PageType) => {
+  const handleAddPageToWorkspace = useCallback((workspaceId: string, pageType: PageType, parentId?: string) => {
     const typeNames = {
       mindmap: 'Mindmap',
       document: 'Document',
@@ -626,6 +626,7 @@ export const JourneyCanvas = () => {
       title: `Nieuwe ${typeNames[pageType]}`,
       type: pageType,
       workspaceId,
+      parentId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -636,11 +637,42 @@ export const JourneyCanvas = () => {
       [newPage.id]: pageType === 'mindmap' ? { stages: [] } : (pageType === 'document' ? { blocks: [] } : {})
     }));
     
-    // Add to workspace pages ONLY
-    setWorkspacePages(prev => ({
-      ...prev,
-      [workspaceId]: [...(prev[workspaceId] || []), newPage]
-    }));
+    // Add to workspace pages
+    setWorkspacePages(prev => {
+      const workspacePagesList = prev[workspaceId] || [];
+      
+      // If there's a parentId, add as child
+      if (parentId) {
+        const addChildToParent = (pages: WorkspacePage[]): WorkspacePage[] => {
+          return pages.map(page => {
+            if (page.id === parentId) {
+              return {
+                ...page,
+                children: [...(page.children || []), newPage]
+              };
+            }
+            if (page.children) {
+              return {
+                ...page,
+                children: addChildToParent(page.children)
+              };
+            }
+            return page;
+          });
+        };
+        
+        return {
+          ...prev,
+          [workspaceId]: addChildToParent(workspacePagesList)
+        };
+      }
+      
+      // Otherwise add to top level
+      return {
+        ...prev,
+        [workspaceId]: [...workspacePagesList, newPage]
+      };
+    });
     
     setSelectedPage(newPage);
     setCurrentView('workspace-page');
@@ -728,7 +760,7 @@ export const JourneyCanvas = () => {
     });
   }, []);
 
-  const handleAddPrivatePage = useCallback((pageType: PageType) => {
+  const handleAddPrivatePage = useCallback((pageType: PageType, parentId?: string) => {
     const typeNames = {
       mindmap: 'Mindmap',
       document: 'Document',
@@ -742,6 +774,7 @@ export const JourneyCanvas = () => {
       type: pageType,
       icon: pageType === 'database' ? '📊' : pageType === 'document' ? '📄' : pageType === 'mindmap' ? '🧠' : '📋',
       blocks: [],
+      parentId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -752,7 +785,35 @@ export const JourneyCanvas = () => {
       [newPage.id]: pageType === 'mindmap' ? { stages: [] } : (pageType === 'document' ? { blocks: [] } : {})
     }));
     
-    setPages(prev => [...prev, newPage]);
+    // Add to pages
+    setPages(prev => {
+      // If there's a parentId, add as child
+      if (parentId) {
+        const addChildToParent = (pages: Page[]): Page[] => {
+          return pages.map(page => {
+            if (page.id === parentId) {
+              return {
+                ...page,
+                children: [...(page.children || []), newPage]
+              };
+            }
+            if (page.children) {
+              return {
+                ...page,
+                children: addChildToParent(page.children)
+              };
+            }
+            return page;
+          });
+        };
+        
+        return addChildToParent(prev);
+      }
+      
+      // Otherwise add to top level
+      return [...prev, newPage];
+    });
+    
     setSelectedPage(newPage as any);
     setCurrentView('workspace-page');
     
@@ -781,7 +842,7 @@ export const JourneyCanvas = () => {
     toast.success('Pagina hernoemd');
   }, [selectedPage]);
 
-  const handleShowTemplateSelector = useCallback((target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => {
+  const handleShowTemplateSelector = useCallback((target: { type: 'private', parentId?: string } | { type: 'workspace', workspaceId: string, parentId?: string }) => {
     // Directly create a canvas for both private and workspace
     if (target.type === 'private') {
       const newPage: Page = {
@@ -790,6 +851,7 @@ export const JourneyCanvas = () => {
         type: 'document',
         icon: '📄',
         blocks: [],
+        parentId: target.parentId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -800,7 +862,35 @@ export const JourneyCanvas = () => {
         [newPage.id]: { blocks: [] }
       }));
       
-      setPages(prev => [...prev, newPage]);
+      // Add to pages
+      setPages(prev => {
+        // If there's a parentId, add as child
+        if (target.parentId) {
+          const addChildToParent = (pages: Page[]): Page[] => {
+            return pages.map(page => {
+              if (page.id === target.parentId) {
+                return {
+                  ...page,
+                  children: [...(page.children || []), newPage]
+                };
+              }
+              if (page.children) {
+                return {
+                  ...page,
+                  children: addChildToParent(page.children)
+                };
+              }
+              return page;
+            });
+          };
+          
+          return addChildToParent(prev);
+        }
+        
+        // Otherwise add to top level
+        return [...prev, newPage];
+      });
+      
       setSelectedPage(newPage as any);
       setCurrentView('workspace-page');
       
@@ -814,6 +904,7 @@ export const JourneyCanvas = () => {
         title: 'Nieuwe Canvas',
         type: 'document',
         workspaceId: target.workspaceId,
+        parentId: target.parentId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -824,11 +915,42 @@ export const JourneyCanvas = () => {
         [newPage.id]: { blocks: [] }
       }));
       
-      // Add to workspace pages ONLY
-      setWorkspacePages(prev => ({
-        ...prev,
-        [target.workspaceId]: [...(prev[target.workspaceId] || []), newPage]
-      }));
+      // Add to workspace pages
+      setWorkspacePages(prev => {
+        const workspacePagesList = prev[target.workspaceId] || [];
+        
+        // If there's a parentId, add as child
+        if (target.parentId) {
+          const addChildToParent = (pages: WorkspacePage[]): WorkspacePage[] => {
+            return pages.map(page => {
+              if (page.id === target.parentId) {
+                return {
+                  ...page,
+                  children: [...(page.children || []), newPage]
+                };
+              }
+              if (page.children) {
+                return {
+                  ...page,
+                  children: addChildToParent(page.children)
+                };
+              }
+              return page;
+            });
+          };
+          
+          return {
+            ...prev,
+            [target.workspaceId]: addChildToParent(workspacePagesList)
+          };
+        }
+        
+        // Otherwise add to top level
+        return {
+          ...prev,
+          [target.workspaceId]: [...workspacePagesList, newPage]
+        };
+      });
       
       setSelectedPage(newPage);
       setCurrentView('workspace-page');
