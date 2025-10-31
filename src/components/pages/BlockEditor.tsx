@@ -1,8 +1,9 @@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Block } from '@/types/journey';
+import { Block, JourneyData } from '@/types/journey';
 import { Separator } from '@/components/ui/separator';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
+import { MindmapBlock } from './MindmapBlock';
 
 interface BlockEditorProps {
   block: Block;
@@ -100,6 +101,14 @@ export const BlockEditor = ({ block, onChange }: BlockEditorProps) => {
         <div className="border rounded-lg p-4 my-4">
           <DatabaseManager />
         </div>
+      );
+
+    case 'mindmap':
+      return (
+        <MindmapBlock
+          data={block.mindmapData || { stages: [] }}
+          onChange={(data: JourneyData) => onChange({ mindmapData: data })}
+        />
       );
 
     case 'text':

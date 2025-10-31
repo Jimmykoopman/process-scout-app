@@ -98,7 +98,7 @@ export interface DatabaseSchema {
   boardGroupBy?: string; // Field ID to group by in board view
 }
 
-export type BlockType = 'text' | 'heading1' | 'heading2' | 'heading3' | 'todo' | 'code' | 'quote' | 'divider' | 'database';
+export type BlockType = 'text' | 'heading1' | 'heading2' | 'heading3' | 'todo' | 'code' | 'quote' | 'divider' | 'database' | 'mindmap';
 
 export interface Block {
   id: string;
@@ -107,6 +107,7 @@ export interface Block {
   checked?: boolean; // For todo blocks
   language?: string; // For code blocks
   databaseId?: string; // For database blocks
+  mindmapData?: JourneyData; // For mindmap blocks
 }
 
 export interface Page {

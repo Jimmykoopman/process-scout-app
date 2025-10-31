@@ -778,10 +778,43 @@ export const JourneyCanvas = () => {
   }, [selectedPage]);
 
   const handleShowTemplateSelector = useCallback((target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => {
-    setTemplateSelectorTarget(target);
-    setCurrentView('template-selector');
-    setSelectedPage(null);
-  }, []);
+    // Instead of showing template selector, directly create a canvas document
+    if (target.type === 'private') {
+      handleAddPrivatePage('document');
+    } else {
+      const typeNames = {
+        mindmap: 'Mindmap',
+        document: 'Canvas',
+        database: 'Database',
+        form: 'Formulier'
+      };
+
+      const newPage: WorkspacePage = {
+        id: `page-${Date.now()}`,
+        title: 'Nieuwe Canvas',
+        type: 'document',
+        workspaceId: target.workspaceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Initialize empty data for the new page
+      setPageData(prev => ({
+        ...prev,
+        [newPage.id]: { blocks: [] }
+      }));
+      
+      // Add to workspace pages ONLY
+      setWorkspacePages(prev => ({
+        ...prev,
+        [target.workspaceId]: [...(prev[target.workspaceId] || []), newPage]
+      }));
+      
+      setSelectedPage(newPage);
+      setCurrentView('workspace-page');
+      toast.success('Canvas aangemaakt in teamruimte');
+    }
+  }, [handleAddPrivatePage]);
 
   const handleTemplateSelected = useCallback((type: PageType) => {
     if (!templateSelectorTarget) return;
