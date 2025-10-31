@@ -51,7 +51,7 @@ export const JourneyCanvas = () => {
   });
   
   // View management
-  const [currentView, setCurrentView] = useState<'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('journey');
+  const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('home');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
 
@@ -312,7 +312,13 @@ export const JourneyCanvas = () => {
   }, []);
 
   const handleMenuSelect = useCallback((menuId: string, pageData?: WorkspacePage) => {
-    if (menuId === 'database') {
+    if (menuId === 'home') {
+      setCurrentView('home');
+      setSelectedPage(null);
+    } else if (menuId === 'inbox') {
+      setCurrentView('inbox');
+      setSelectedPage(null);
+    } else if (menuId === 'database') {
       setCurrentView('database');
       setSelectedPage(null);
       toast.info('Database weergave geopend');
@@ -324,10 +330,6 @@ export const JourneyCanvas = () => {
       setCurrentView('documenten');
       setSelectedPage(null);
       toast.info('Documenten weergave geopend');
-    } else if (menuId === 'home') {
-      setCurrentView('journey');
-      setSelectedPage(null);
-      toast.info('Journey weergave geopend');
     } else if (menuId.startsWith('workspace-') && !menuId.includes('page')) {
       // Workspace home clicked
       setCurrentView('workspace-page');
@@ -339,9 +341,8 @@ export const JourneyCanvas = () => {
         setSelectedPage(pageData);
       }
     } else {
-      setCurrentView('journey');
+      setCurrentView('home');
       setSelectedPage(null);
-      toast.info(`Menu geselecteerd: ${menuId}`);
     }
   }, []);
 
@@ -396,7 +397,21 @@ export const JourneyCanvas = () => {
           </div>
           
           <div className="flex-1 relative flex flex-col">
-            {currentView === 'database' ? (
+            {currentView === 'home' ? (
+              <div className="flex-1 flex items-center justify-center bg-muted/20">
+                <div className="text-center">
+                  <h2 className="text-2xl font-semibold mb-4">Welkom</h2>
+                  <p className="text-muted-foreground">Selecteer een workspace of maak een nieuwe pagina aan</p>
+                </div>
+              </div>
+            ) : currentView === 'inbox' ? (
+              <div className="flex-1 flex items-center justify-center bg-muted/20">
+                <div className="text-center">
+                  <h2 className="text-2xl font-semibold mb-4">Inbox</h2>
+                  <p className="text-muted-foreground">Geen nieuwe items</p>
+                </div>
+              </div>
+            ) : currentView === 'database' ? (
               <DatabaseManager />
             ) : currentView === 'pages' ? (
               <PageManager />
@@ -477,51 +492,7 @@ export const JourneyCanvas = () => {
                   </div>
                 </>
               )
-            ) : (
-              <>
-                <Toolbar
-                  mode="mindmap"
-                  onAddNode={handleAddNode}
-                  onShapeChange={setSelectedShape}
-                  selectedShape={selectedShape}
-                  onFileUpload={() => toast.info('Upload functionaliteit')}
-                />
-                <div className="flex-1 relative flex">
-                  <div className="flex-1 relative">
-                    <ReactFlow
-                      nodes={nodes}
-                      edges={edges}
-                      onNodesChange={onNodesChange}
-                      onEdgesChange={onEdgesChange}
-                      onConnect={onConnect}
-                      nodeTypes={nodeTypes}
-                      fitView
-                      className="bg-canvas-bg"
-                    >
-                      <Background color="#cbd5e1" gap={20} />
-                      <Controls />
-                      <MiniMap
-                        nodeColor={(node) => {
-                          const data = node.data as { color?: string };
-                          return data.color || '#0891B2';
-                        }}
-                        className="bg-card border border-border"
-                      />
-                    </ReactFlow>
-                  </div>
-                  <DetailPanel
-                    node={selectedNode}
-                    onClose={handleClosePanel}
-                    onChildClick={handleChildClick}
-                    breadcrumbs={breadcrumbs}
-                    onDocumentUpload={handleDocumentUpload}
-                    onTextStyleChange={handleTextStyleChange}
-                    onLinkAdd={handleLinkAdd}
-                    onLinkRemove={handleLinkRemove}
-                  />
-                </div>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
 
