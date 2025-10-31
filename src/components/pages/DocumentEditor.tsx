@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Bold, 
@@ -59,6 +59,54 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
     }
   };
 
+  const makeImagesResizable = () => {
+    if (!editorRef.current) return;
+    
+    const images = editorRef.current.querySelectorAll('img');
+    images.forEach((img) => {
+      if (!img.hasAttribute('data-resizable')) {
+        img.setAttribute('data-resizable', 'true');
+        img.style.cursor = 'nwse-resize';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        const handleMouseDown = (e: MouseEvent) => {
+          e.preventDefault();
+          isResizing = true;
+          startX = e.clientX;
+          startWidth = img.offsetWidth;
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        };
+
+        const handleMouseMove = (e: MouseEvent) => {
+          if (!isResizing) return;
+          const width = startWidth + (e.clientX - startX);
+          img.style.width = `${Math.max(50, Math.min(width, 800))}px`;
+        };
+
+        const handleMouseUp = () => {
+          isResizing = false;
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+          handleInput();
+        };
+
+        img.addEventListener('mousedown', handleMouseDown);
+      }
+    });
+  };
+
+  // Make images resizable on mount and when content changes
+  useEffect(() => {
+    makeImagesResizable();
+  }, [content]);
+
   return (
     <div className="flex-1 flex bg-background">
       {/* Editor Area */}
@@ -68,7 +116,10 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
             ref={editorRef}
             contentEditable
             className="outline-none min-h-full text-foreground"
-            onInput={handleInput}
+            onInput={() => {
+              handleInput();
+              makeImagesResizable();
+            }}
             onMouseUp={handleSelection}
             onKeyUp={handleSelection}
             dangerouslySetInnerHTML={{ __html: content }}

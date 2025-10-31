@@ -154,7 +154,7 @@ export function AppSidebar({
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
+    <Sidebar className="border-r border-sidebar-border z-50">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <WorkspaceManager
           workspaces={workspaces}
