@@ -202,55 +202,6 @@ export function AppSidebar({
 
         <SidebarSeparator />
 
-        {/* Canvas/Workspaces Overview */}
-        <SidebarGroup className="py-2">
-          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-2">
-            Canvas
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {/* Private Pages as Canvas */}
-              {privatePages.map((page) => {
-                const PageIcon = getPageIcon(page.type as PageType);
-                return (
-                  <SidebarMenuItem key={page.id}>
-                    <SidebarMenuButton
-                      onClick={() => {
-                        setSelectedView(page.id);
-                        onMenuSelect(page.id, page as any);
-                      }}
-                      isActive={selectedView === page.id}
-                      className="group"
-                    >
-                      <PageIcon className="h-4 w-4" />
-                      <span>{page.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-              
-              {/* Workspaces as Canvas */}
-              {workspaces.map((workspace) => (
-                <SidebarMenuItem key={workspace.id}>
-                  <SidebarMenuButton
-                    onClick={() => {
-                      onWorkspaceChange(workspace.id);
-                      handleMenuClick('workspace-' + workspace.id);
-                    }}
-                    isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
-                    className="group"
-                  >
-                    <Users className="h-4 w-4" />
-                    <span>{workspace.name}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
         {/* Privé */}
         <Collapsible open={openSections.private} onOpenChange={() => setOpenSections(prev => ({ ...prev, private: !prev.private }))}>
           <SidebarGroup>
