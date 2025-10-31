@@ -132,6 +132,8 @@ export const BlockEditor = ({ block, onChange, onAddBlock }: BlockEditorProps) =
         <MindmapBlock
           data={block.mindmapData || { stages: [] }}
           onChange={(data: JourneyData) => onChange({ mindmapData: data })}
+          title={block.content || 'Mindmap'}
+          onTitleChange={(title: string) => onChange({ content: title })}
         />
       );
 

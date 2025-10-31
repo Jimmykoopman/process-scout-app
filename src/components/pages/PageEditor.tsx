@@ -39,13 +39,15 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
       block.id === blockId ? { ...block, ...updates } : block
     );
 
-    // If the last block now has content or is a non-text block, add a new empty block
+    // If the last block now has content (but not for mindmap blocks), add a new empty block
     const lastBlock = updatedBlocks[updatedBlocks.length - 1];
     const hasContent = updates.content && updates.content.trim() !== '';
     const isNonTextBlock = updates.type && updates.type !== 'text';
-    const hasMindmapData = updates.mindmapData;
     
-    if (lastBlock.id === blockId && (hasContent || isNonTextBlock || hasMindmapData)) {
+    // Don't auto-add empty block for mindmap or database blocks
+    const isSelfContainedBlock = lastBlock.type === 'mindmap' || lastBlock.type === 'database';
+    
+    if (lastBlock.id === blockId && (hasContent || isNonTextBlock) && !isSelfContainedBlock) {
       const newEmptyBlock: Block = {
         id: `block-${Date.now()}`,
         type: 'text',
@@ -65,7 +67,7 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
     const newBlock: Block = {
       id: `block-${Date.now()}`,
       type,
-      content: '',
+      content: type === 'mindmap' ? 'Mindmap' : '', // Default title for mindmap
       checked: type === 'todo' ? false : undefined,
       mindmapData: type === 'mindmap' ? { stages: [] } : undefined,
     };
@@ -73,19 +75,6 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
     const afterIndex = page.blocks.findIndex(b => b.id === afterBlockId);
     const newBlocks = [...page.blocks];
     newBlocks.splice(afterIndex + 1, 0, newBlock);
-
-    // If we're adding a non-text block and there's no empty block after it, add one
-    const isLastBlock = afterIndex === newBlocks.length - 2;
-    const isNonTextBlock = type !== 'text' && type !== 'heading1' && type !== 'heading2' && type !== 'heading3' && type !== 'todo' && type !== 'code' && type !== 'quote';
-    
-    if (isLastBlock && isNonTextBlock) {
-      const emptyBlock: Block = {
-        id: `block-${Date.now()}-empty`,
-        type: 'text',
-        content: '',
-      };
-      newBlocks.push(emptyBlock);
-    }
 
     onPageChange({
       ...page,

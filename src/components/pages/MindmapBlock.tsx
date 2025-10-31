@@ -20,9 +20,11 @@ const nodeTypes = {
 interface MindmapBlockProps {
   data: JourneyData;
   onChange: (data: JourneyData) => void;
+  title: string;
+  onTitleChange: (title: string) => void;
 }
 
-export const MindmapBlock = ({ data, onChange }: MindmapBlockProps) => {
+export const MindmapBlock = ({ data, onChange, title, onTitleChange }: MindmapBlockProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Convert JourneyData to ReactFlow nodes and edges
@@ -99,35 +101,46 @@ export const MindmapBlock = ({ data, onChange }: MindmapBlockProps) => {
   }
 
   return (
-    <div className="relative border rounded-lg overflow-hidden my-4 bg-muted/30">
-      {/* Zoomed out preview */}
-      <div className="h-64 pointer-events-none">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          fitView
-          minZoom={0.1}
-          maxZoom={2}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
-      </div>
+    <div className="my-4">
+      {/* Editable title */}
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => onTitleChange(e.target.value)}
+        placeholder="Mindmap titel"
+        className="text-sm font-semibold mb-2 bg-transparent border-0 focus:outline-none focus:ring-0 px-0"
+      />
+      
+      <div className="relative border rounded-lg overflow-hidden bg-muted/30">
+        {/* Zoomed out preview */}
+        <div className="h-64 pointer-events-none">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={0.1}
+            maxZoom={2}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        </div>
 
-      {/* Expand button overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-background/0 hover:bg-background/10 transition-colors">
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={() => setIsExpanded(true)}
-          className="shadow-lg"
-        >
-          <Maximize2 className="h-4 w-4 mr-2" />
-          Open mindmap
-        </Button>
+        {/* Expand button overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-background/0 hover:bg-background/10 transition-colors">
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => setIsExpanded(true)}
+            className="shadow-lg"
+          >
+            <Maximize2 className="h-4 w-4 mr-2" />
+            Open mindmap
+          </Button>
+        </div>
       </div>
     </div>
   );
