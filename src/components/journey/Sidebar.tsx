@@ -215,7 +215,25 @@ export function AppSidebar({
                   )}
                   <span className="text-xs font-medium text-muted-foreground">Privé</span>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                      <DropdownMenuItem>
+                        <Star className="h-4 w-4 mr-2" />
+                        Toevoegen aan Favorieten
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -320,6 +338,37 @@ export function AppSidebar({
                     <ChevronRight className="h-3 w-3" />
                   )}
                   <span className="text-xs font-medium text-muted-foreground">Teamruimten</span>
+                </div>
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                      <DropdownMenuItem>
+                        <Star className="h-4 w-4 mr-2" />
+                        Toevoegen aan Favorieten
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddWorkspace('Nieuwe teamruimte', 'mindmap');
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
               </SidebarGroupLabel>
             </CollapsibleTrigger>
@@ -475,58 +524,60 @@ export function AppSidebar({
                             </CollapsibleContent>
                           </Collapsible>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <MoreHorizontal className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-64">
-                              <DropdownMenuItem onClick={() => handleAddToFavorites(workspace.id)}>
-                                <Star className="h-4 w-4 mr-2" />
-                                Toevoegen aan Favorieten
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleStartRename('workspace', workspace.id, workspace.name)}>
-                                <FileEdit className="h-4 w-4 mr-2" />
-                                Naam wijzigen
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Users className="h-4 w-4 mr-2" />
-                                Leden toevoegen
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                <Link2 className="h-4 w-4 mr-2" />
-                                Link kopiëren
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Copy className="h-4 w-4 mr-2" />
-                                Teamruimte dupliceren
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => onDeleteWorkspace(workspace.id)}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Teamruimte verwijderen
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-0.5">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <MoreHorizontal className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-64 bg-popover z-50">
+                                <DropdownMenuItem onClick={() => handleAddToFavorites(workspace.id)}>
+                                  <Star className="h-4 w-4 mr-2" />
+                                  Toevoegen aan Favorieten
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleStartRename('workspace', workspace.id, workspace.name)}>
+                                  <FileEdit className="h-4 w-4 mr-2" />
+                                  Naam wijzigen
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Users className="h-4 w-4 mr-2" />
+                                  Leden toevoegen
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                  <Link2 className="h-4 w-4 mr-2" />
+                                  Link kopiëren
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Teamruimte dupliceren
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => onDeleteWorkspace(workspace.id)}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Teamruimte verwijderen
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
-                            }}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
+                              }}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </SidebarMenuItem>
                     </div>
