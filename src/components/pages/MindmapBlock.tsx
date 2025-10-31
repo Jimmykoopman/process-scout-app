@@ -70,7 +70,7 @@ export const MindmapBlock = ({ data, onChange, title, onTitleChange }: MindmapBl
 
   if (isExpanded) {
     return (
-      <div className="fixed inset-0 z-50 bg-background">
+      <div className="fixed top-0 right-0 bottom-0 left-64 z-40 bg-background">
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-card">
