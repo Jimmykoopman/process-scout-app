@@ -317,28 +317,58 @@ export function AppSidebar({
                                 <PageIcon className="h-4 w-4" />
                                 <span>{page.title}</span>
                               </SidebarMenuButton>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <MoreHorizontal className="h-3 w-3" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem onClick={() => handleStartRename('private', page.id, page.title)}>
-                                    <FileEdit className="h-4 w-4 mr-2" />
-                                    Naam wijzigen
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => onDeletePrivatePage(page.id)}>
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Verplaatsen naar prullenbak
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <div className="flex items-center gap-0.5">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <MoreHorizontal className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                                    <DropdownMenuItem>
+                                      <Star className="h-4 w-4 mr-2" />
+                                      Toevoegen aan favorieten
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStartRename('private', page.id, page.title)}>
+                                      <FileEdit className="h-4 w-4 mr-2" />
+                                      Naam wijzigen
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <Copy className="h-4 w-4 mr-2" />
+                                      Dupliceren
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      Openen in nieuw tablad
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => onDeletePrivatePage(page.id)}>
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Verplaatsen naar prullenbak
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Een subpagina toevoegen
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onShowTemplateSelector({ type: 'private' });
+                                  }}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </>
                           )}
                         </div>
@@ -502,44 +532,57 @@ export function AppSidebar({
                                             <FileText className="h-3 w-3" />
                                             <span className="text-xs">{page.title}</span>
                                           </SidebarMenuSubButton>
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
-                                              >
-                                                <MoreHorizontal className="h-3 w-3" />
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56">
-                                              <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
-                                                <Star className="h-4 w-4 mr-2" />
-                                                Toevoegen aan Favorieten
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem>
-                                                <Link2 className="h-4 w-4 mr-2" />
-                                                Link kopiëren
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem>
-                                                <Copy className="h-4 w-4 mr-2" />
-                                                Dupliceren
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => handleStartRename('page', page.id, page.title, workspace.id)}>
-                                                <FileEdit className="h-4 w-4 mr-2" />
-                                                Naam wijzigen
-                                              </DropdownMenuItem>
-                                              <DropdownMenuSeparator />
-                                              <DropdownMenuItem onClick={() => onDeleteWorkspacePage(workspace.id, page.id)}>
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Verplaatsen naar prullenbak
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem>
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                Een subpagina toevoegen
-                                              </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
+                                          <div className="flex items-center gap-0.5">
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
+                                                >
+                                                  <MoreHorizontal className="h-3 w-3" />
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                                                <DropdownMenuItem onClick={() => handleAddToFavorites(page.id)}>
+                                                  <Star className="h-4 w-4 mr-2" />
+                                                  Toevoegen aan Favorieten
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                  <Link2 className="h-4 w-4 mr-2" />
+                                                  Link kopiëren
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                  <Copy className="h-4 w-4 mr-2" />
+                                                  Dupliceren
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleStartRename('page', page.id, page.title, workspace.id)}>
+                                                  <FileEdit className="h-4 w-4 mr-2" />
+                                                  Naam wijzigen
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => onDeleteWorkspacePage(workspace.id, page.id)}>
+                                                  <Trash2 className="h-4 w-4 mr-2" />
+                                                  Verplaatsen naar prullenbak
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                  <Plus className="h-4 w-4 mr-2" />
+                                                  Een subpagina toevoegen
+                                                </DropdownMenuItem>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-5 w-5 opacity-0 group-hover/page:opacity-100 transition-opacity"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
+                                              }}
+                                            >
+                                              <Plus className="h-3 w-3" />
+                                            </Button>
+                                          </div>
                                         </>
                                       )}
                                     </div>
