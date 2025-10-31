@@ -861,15 +861,20 @@ export const JourneyCanvas = () => {
                 // Show page content based on type
                 <>
                   {selectedPage.type === 'mindmap' ? (
-                    <>
-                      <Toolbar
-                        mode="mindmap"
-                        onAddNode={handleAddNode}
-                        onShapeChange={setSelectedShape}
-                        selectedShape={selectedShape}
-                        onFileUpload={() => toast.info('Upload functionaliteit')}
-                      />
-                      <div className="flex-1 relative flex">
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      {/* Fixed Toolbar */}
+                      <div className="flex-shrink-0 border-b border-border">
+                        <Toolbar
+                          mode="mindmap"
+                          onAddNode={handleAddNode}
+                          onShapeChange={setSelectedShape}
+                          selectedShape={selectedShape}
+                          onFileUpload={() => toast.info('Upload functionaliteit')}
+                        />
+                      </div>
+                      
+                      {/* Scrollable Content Area */}
+                      <div className="flex-1 flex overflow-hidden">
                         <div className="flex-1 relative">
                           <ReactFlow
                             nodes={nodes}
@@ -894,20 +899,24 @@ export const JourneyCanvas = () => {
                             />
                           </ReactFlow>
                         </div>
-                        <DetailPanel
-                          node={selectedNode}
-                          onClose={handleClosePanel}
-                          onChildClick={handleChildClick}
-                          breadcrumbs={breadcrumbs}
-                          onDocumentUpload={handleDocumentUpload}
-                          onNodeLabelChange={handleNodeLabelChange}
-                          onTextStyleChange={handleTextStyleChange}
-                          onLinkAdd={handleLinkAdd}
-                          onLinkRemove={handleLinkRemove}
-                          onExpandDocument={() => setExpandedNode(selectedNode)}
-                        />
+                        
+                        {/* Scrollable Detail Panel */}
+                        {selectedNode && (
+                          <DetailPanel
+                            node={selectedNode}
+                            onClose={handleClosePanel}
+                            onChildClick={handleChildClick}
+                            breadcrumbs={breadcrumbs}
+                            onDocumentUpload={handleDocumentUpload}
+                            onNodeLabelChange={handleNodeLabelChange}
+                            onTextStyleChange={handleTextStyleChange}
+                            onLinkAdd={handleLinkAdd}
+                            onLinkRemove={handleLinkRemove}
+                            onExpandDocument={() => setExpandedNode(selectedNode)}
+                          />
+                        )}
                       </div>
-                    </>
+                    </div>
                   ) : selectedPage.type === 'document' ? (
                     <div className="flex-1 overflow-auto bg-background">
                       <PageEditor

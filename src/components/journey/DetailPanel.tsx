@@ -84,8 +84,9 @@ export const DetailPanel = ({
   };
 
   return (
-    <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+    <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full overflow-hidden">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-border">
         <Input
           value={editedLabel}
           onChange={(e) => handleLabelChange(e.target.value)}
@@ -103,7 +104,8 @@ export const DetailPanel = ({
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      {/* Scrollable Content */}
+      <ScrollArea className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-4">
           {node.details && (
             <p className="text-muted-foreground text-sm">{node.details}</p>
