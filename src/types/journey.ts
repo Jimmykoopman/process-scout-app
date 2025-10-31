@@ -119,6 +119,7 @@ export interface Page {
   parentId?: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite?: boolean;
 }
 
 export interface Person {
