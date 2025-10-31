@@ -13,7 +13,7 @@ export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps)
   if (!node || !open) return null;
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[800px] bg-background border-l border-border shadow-2xl flex flex-col z-30">
+    <div className="w-[600px] h-full bg-background border-l border-border shadow-xl flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-card">
         <h2 className="text-xl font-bold">{node.label}</h2>

@@ -69,7 +69,7 @@ export const JourneyCanvas = () => {
   const handleNodeClick = useCallback((node: JourneyNode, parentBreadcrumbs: JourneyNode[] = []) => {
     setSelectedNode(node);
     setBreadcrumbs([...parentBreadcrumbs, node]);
-    // Don't automatically open expanded view
+    setExpandedNode(node);
   }, []);
 
   const handleNodeDoubleClick = useCallback((node: JourneyNode) => {
