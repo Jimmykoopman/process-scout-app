@@ -59,6 +59,7 @@ export const JourneyCanvas = () => {
   const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
+  const [templateSelectorTarget, setTemplateSelectorTarget] = useState<{ type: 'private' } | { type: 'workspace', workspaceId: string } | null>(null);
 
   // Get current page data
   const getCurrentPageKey = () => {
@@ -757,10 +758,58 @@ export const JourneyCanvas = () => {
     toast.success('Pagina hernoemd');
   }, [selectedPage]);
 
-  const handleShowTemplateSelector = useCallback(() => {
+  const handleShowTemplateSelector = useCallback((target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => {
+    setTemplateSelectorTarget(target);
     setCurrentView('template-selector');
     setSelectedPage(null);
   }, []);
+
+  const handleTemplateSelected = useCallback((type: PageType) => {
+    if (!templateSelectorTarget) return;
+    
+    if (templateSelectorTarget.type === 'private') {
+      handleAddPrivatePage(type);
+    } else {
+      // Temporarily set the workspace for adding the page
+      const previousWorkspace = currentWorkspaceId;
+      setCurrentWorkspaceId(templateSelectorTarget.workspaceId);
+      
+      const typeNames = {
+        mindmap: 'Mindmap',
+        document: 'Document',
+        database: 'Database',
+        form: 'Formulier'
+      };
+
+      const newPage: WorkspacePage = {
+        id: `page-${Date.now()}`,
+        title: `Nieuwe ${typeNames[type]}`,
+        type,
+        workspaceId: templateSelectorTarget.workspaceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Initialize empty data for the new page
+      setPageData(prev => ({
+        ...prev,
+        [newPage.id]: type === 'mindmap' ? { stages: [] } : (type === 'document' ? { blocks: [] } : {})
+      }));
+      
+      // Add to workspace pages
+      setWorkspacePages(prev => ({
+        ...prev,
+        [templateSelectorTarget.workspaceId]: [...(prev[templateSelectorTarget.workspaceId] || []), newPage]
+      }));
+      
+      setPages(prev => [...prev, newPage as any]);
+      setSelectedPage(newPage);
+      setCurrentView('workspace-page');
+      toast.success(`${typeNames[type]} aangemaakt in teamruimte`);
+    }
+    
+    setTemplateSelectorTarget(null);
+  }, [templateSelectorTarget, handleAddPrivatePage, currentWorkspaceId]);
 
   const handleCreatePageInWorkspace = useCallback((type: PageType) => {
     const typeNames = {
@@ -907,7 +956,7 @@ export const JourneyCanvas = () => {
             ) : currentView === 'documenten' ? (
               <DocumentLibrary documents={documents} onDocumentClick={handleDocumentClick} />
             ) : currentView === 'template-selector' ? (
-              <TemplateSelector onSelectTemplate={handleCreatePageInWorkspace} />
+              <TemplateSelector onSelectTemplate={handleTemplateSelected} />
             ) : currentView === 'workspace-page' ? (
               selectedPage ? (
                 // Show page content based on type

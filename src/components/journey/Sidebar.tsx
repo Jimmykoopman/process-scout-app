@@ -48,7 +48,7 @@ interface AppSidebarProps {
   onAddPrivatePage: (pageType: PageType) => void;
   onDeletePrivatePage: (pageId: string) => void;
   onRenamePrivatePage: (pageId: string, newTitle: string) => void;
-  onShowTemplateSelector: () => void;
+  onShowTemplateSelector: (target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => void;
 }
 
 const mainItems = [
@@ -222,7 +222,7 @@ export function AppSidebar({
                     className="h-5 w-5"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onShowTemplateSelector();
+                      onShowTemplateSelector({ type: 'private' });
                     }}
                   >
                     <Plus className="h-3 w-3" />
@@ -507,7 +507,7 @@ export function AppSidebar({
                             className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onShowTemplateSelector();
+                              onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
                             }}
                           >
                             <Plus className="h-3 w-3" />
