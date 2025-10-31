@@ -869,7 +869,7 @@ export const JourneyCanvas = () => {
                           ? 'Documenten'
                           : (() => {
                               const ws = workspaces.find(w => w.id === currentWorkspaceId);
-                              return ws ? `${ws.name} Home` : 'Workspace';
+                              return ws ? ws.name : 'Workspace';
                             })()
                 }
               </h1>
