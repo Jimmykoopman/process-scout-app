@@ -25,13 +25,16 @@ export interface JourneyNode {
   links?: NodeLink[];
 }
 
+export type PageType = 'mindmap' | 'document' | 'database' | 'form';
+
 export interface WorkspacePage {
   id: string;
   title: string;
   icon?: string;
   workspaceId: string;
   children?: WorkspacePage[];
-  type?: 'page' | 'database' | 'board' | 'calendar' | 'list';
+  type: PageType;
+  content?: any;
   createdAt: string;
   updatedAt: string;
 }

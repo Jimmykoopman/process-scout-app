@@ -17,7 +17,8 @@ import { DetailPanel } from './DetailPanel';
 import { Toolbar } from './Toolbar';
 import { AppSidebar } from './Sidebar';
 import { ExpandedNodeView } from './ExpandedNodeView';
-import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink, WorkspacePage, Page } from '@/types/journey';
+import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink, WorkspacePage, Page, PageType } from '@/types/journey';
+import { DocumentEditor } from '@/components/pages/DocumentEditor';
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
@@ -283,43 +284,59 @@ export const JourneyCanvas = () => {
     toast.info(`Document: ${doc.name} - Node: ${doc.nodePath}`);
   }, []);
 
-  const handleMenuSelect = useCallback((menuId: string) => {
+  const handleMenuSelect = useCallback((menuId: string, pageData?: WorkspacePage) => {
     if (menuId === 'database') {
       setCurrentView('database');
+      setSelectedPage(null);
       toast.info('Database weergave geopend');
     } else if (menuId === 'pages') {
       setCurrentView('pages');
+      setSelectedPage(null);
       toast.info("Pagina's weergave geopend");
     } else if (menuId === 'documenten') {
       setCurrentView('documenten');
+      setSelectedPage(null);
       toast.info('Documenten weergave geopend');
     } else if (menuId === 'home') {
       setCurrentView('journey');
+      setSelectedPage(null);
       toast.info('Journey weergave geopend');
-    } else if (menuId.startsWith('page-')) {
+    } else if (menuId.startsWith('workspace-') && !menuId.includes('page')) {
+      // Workspace home clicked
+      setCurrentView('workspace-page');
+      setSelectedPage(null);
+    } else if (menuId.startsWith('page-') || pageData) {
       // Handle workspace page selection
       setCurrentView('workspace-page');
-      const page = pages.find(p => p.id === menuId);
-      if (page) {
-        setSelectedPage({ 
-          id: page.id, 
-          title: page.title, 
-          workspaceId: currentWorkspaceId,
-          createdAt: page.createdAt,
-          updatedAt: page.updatedAt 
-        });
+      if (pageData) {
+        setSelectedPage(pageData);
       }
     } else {
       setCurrentView('journey');
+      setSelectedPage(null);
       toast.info(`Menu geselecteerd: ${menuId}`);
     }
-  }, [currentWorkspaceId, pages]);
+  }, []);
 
-  const handlePageUpdate = useCallback((pageId: string, blocks: any[]) => {
+  const handlePageUpdate = useCallback((pageId: string, content: any) => {
     setPages(prev => prev.map(p => 
-      p.id === pageId ? { ...p, blocks, updatedAt: new Date().toISOString() } : p
+      p.id === pageId ? { ...p, content, updatedAt: new Date().toISOString() } : p
     ));
   }, []);
+
+  const handleCreatePageInWorkspace = useCallback((type: PageType) => {
+    const newPage: WorkspacePage = {
+      id: `page-${Date.now()}`,
+      title: `Nieuwe ${type}`,
+      type,
+      workspaceId: currentWorkspaceId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setPages(prev => [...prev, newPage as any]);
+    setSelectedPage(newPage);
+    toast.success(`${type} aangemaakt`);
+  }, [currentWorkspaceId]);
 
   return (
     <SidebarProvider>
@@ -340,56 +357,131 @@ export const JourneyCanvas = () => {
             <h1 className="text-lg font-semibold">Journey Mindmap</h1>
           </div>
           
-          <div className="flex-1 relative flex">
+          <div className="flex-1 relative flex flex-col">
             {currentView === 'database' ? (
               <DatabaseManager />
             ) : currentView === 'pages' ? (
               <PageManager />
             ) : currentView === 'documenten' ? (
               <DocumentLibrary documents={documents} onDocumentClick={handleDocumentClick} />
-            ) : currentView === 'workspace-page' && selectedPage ? (
-              <div className="flex-1 p-6 overflow-auto">
-                <PageManager />
-              </div>
+            ) : currentView === 'workspace-page' ? (
+              selectedPage ? (
+                // Show page content based on type
+                <>
+                  {selectedPage.type === 'mindmap' ? (
+                    <>
+                      <Toolbar
+                        mode="mindmap"
+                        onAddNode={handleAddNode}
+                        onShapeChange={setSelectedShape}
+                        selectedShape={selectedShape}
+                        onFileUpload={() => toast.info('Upload functionaliteit')}
+                      />
+                      <div className="flex-1 relative flex">
+                        <div className="flex-1 relative">
+                          <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onConnect={onConnect}
+                            nodeTypes={nodeTypes}
+                            fitView
+                            className="bg-canvas-bg"
+                          >
+                            <Background color="#cbd5e1" gap={20} />
+                            <Controls />
+                            <MiniMap
+                              nodeColor={(node) => {
+                                const data = node.data as { color?: string };
+                                return data.color || '#0891B2';
+                              }}
+                              className="bg-card border border-border"
+                            />
+                          </ReactFlow>
+                        </div>
+                        <DetailPanel
+                          node={selectedNode}
+                          onClose={handleClosePanel}
+                          onChildClick={handleChildClick}
+                          breadcrumbs={breadcrumbs}
+                          onDocumentUpload={handleDocumentUpload}
+                          onTextStyleChange={handleTextStyleChange}
+                          onLinkAdd={handleLinkAdd}
+                          onLinkRemove={handleLinkRemove}
+                        />
+                      </div>
+                    </>
+                  ) : selectedPage.type === 'document' ? (
+                    <DocumentEditor 
+                      content={selectedPage.content}
+                      onChange={(content) => handlePageUpdate(selectedPage.id, content)}
+                    />
+                  ) : selectedPage.type === 'database' ? (
+                    <DatabaseManager />
+                  ) : (
+                    <PageManager />
+                  )}
+                </>
+              ) : (
+                // Workspace home - show template selector
+                <>
+                  <Toolbar
+                    mode="workspace"
+                    onCreatePage={handleCreatePageInWorkspace}
+                    onFileUpload={() => toast.info('Upload functionaliteit')}
+                  />
+                  <div className="flex-1 flex items-center justify-center bg-muted/20">
+                    <div className="text-center">
+                      <h2 className="text-2xl font-semibold mb-4">Workspace Home</h2>
+                      <p className="text-muted-foreground">Klik op 'Voeg toe' om een nieuwe pagina aan te maken</p>
+                    </div>
+                  </div>
+                </>
+              )
             ) : (
               <>
-                <div className="flex-1 relative">
-                  <Toolbar
-                    onAddNode={handleAddNode}
-                    onShapeChange={setSelectedShape}
-                    selectedShape={selectedShape}
-                  />
-                  <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    fitView
-                    className="bg-canvas-bg"
-                  >
-                    <Background color="#cbd5e1" gap={20} />
-                    <Controls />
-                    <MiniMap
-                      nodeColor={(node) => {
-                        const data = node.data as { color?: string };
-                        return data.color || '#0891B2';
-                      }}
-                      className="bg-card border border-border"
-                    />
-                  </ReactFlow>
-                </div>
-                <DetailPanel
-                  node={selectedNode}
-                  onClose={handleClosePanel}
-                  onChildClick={handleChildClick}
-                  breadcrumbs={breadcrumbs}
-                  onDocumentUpload={handleDocumentUpload}
-                  onTextStyleChange={handleTextStyleChange}
-                  onLinkAdd={handleLinkAdd}
-                  onLinkRemove={handleLinkRemove}
+                <Toolbar
+                  mode="mindmap"
+                  onAddNode={handleAddNode}
+                  onShapeChange={setSelectedShape}
+                  selectedShape={selectedShape}
+                  onFileUpload={() => toast.info('Upload functionaliteit')}
                 />
+                <div className="flex-1 relative flex">
+                  <div className="flex-1 relative">
+                    <ReactFlow
+                      nodes={nodes}
+                      edges={edges}
+                      onNodesChange={onNodesChange}
+                      onEdgesChange={onEdgesChange}
+                      onConnect={onConnect}
+                      nodeTypes={nodeTypes}
+                      fitView
+                      className="bg-canvas-bg"
+                    >
+                      <Background color="#cbd5e1" gap={20} />
+                      <Controls />
+                      <MiniMap
+                        nodeColor={(node) => {
+                          const data = node.data as { color?: string };
+                          return data.color || '#0891B2';
+                        }}
+                        className="bg-card border border-border"
+                      />
+                    </ReactFlow>
+                  </div>
+                  <DetailPanel
+                    node={selectedNode}
+                    onClose={handleClosePanel}
+                    onChildClick={handleChildClick}
+                    breadcrumbs={breadcrumbs}
+                    onDocumentUpload={handleDocumentUpload}
+                    onTextStyleChange={handleTextStyleChange}
+                    onLinkAdd={handleLinkAdd}
+                    onLinkRemove={handleLinkRemove}
+                  />
+                </div>
               </>
             )}
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink } from 'lucide-react';
+import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -25,13 +25,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { WorkspaceManager } from './WorkspaceManager';
 import { DocumentLibrary } from './DocumentLibrary';
-import { Workspace, Document, WorkspacePage } from '@/types/journey';
+import { Workspace, Document, WorkspacePage, PageType } from '@/types/journey';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface AppSidebarProps {
-  onMenuSelect: (menuId: string) => void;
+  onMenuSelect: (menuId: string, pageData?: WorkspacePage) => void;
   workspaces: Workspace[];
   currentWorkspaceId: string;
   onWorkspaceChange: (workspaceId: string) => void;
@@ -112,13 +112,19 @@ export function AppSidebar({
     }));
   };
 
-  const handleAddPageToWorkspace = (workspaceId: string, templateType: typeof templateTypes[0]) => {
+  const handleAddPageToWorkspace = (workspaceId: string, pageType: PageType) => {
+    const typeNames = {
+      mindmap: 'Mindmap',
+      document: 'Document',
+      database: 'Database',
+      form: 'Formulier'
+    };
+    
     const newPage: WorkspacePage = {
       id: `page-${Date.now()}`,
-      title: templateType.title,
-      icon: templateType.icon.name,
+      title: `Nieuwe ${typeNames[pageType]}`,
       workspaceId,
-      type: 'page',
+      type: pageType,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -396,8 +402,8 @@ export function AppSidebar({
                                 {(workspacePages[workspace.id] || []).map((page) => (
                                   <SidebarMenuSubItem key={page.id}>
                                     <div className="group/page flex items-center w-full">
-                                      <SidebarMenuSubButton
-                                        onClick={() => handleMenuClick(page.id)}
+                                       <SidebarMenuSubButton
+                                        onClick={() => onMenuSelect(page.id, page)}
                                         isActive={selectedView === page.id}
                                         className="flex-1"
                                       >
@@ -516,21 +522,21 @@ export function AppSidebar({
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[0])}>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'document')}>
                                 <FileText className="h-4 w-4 mr-2" />
-                                Lege pagina
+                                Document
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[1])}>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'mindmap')}>
+                                <Circle className="h-4 w-4 mr-2" />
+                                Mindmap
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'database')}>
                                 <Database className="h-4 w-4 mr-2" />
                                 Database
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[2])}>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, 'form')}>
                                 <FileEdit className="h-4 w-4 mr-2" />
                                 Formulier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[3])}>
-                                <PenTool className="h-4 w-4 mr-2" />
-                                Kladblok
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
