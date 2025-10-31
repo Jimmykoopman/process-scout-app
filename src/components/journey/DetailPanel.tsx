@@ -85,45 +85,28 @@ export const DetailPanel = ({
   return (
     <div className="w-96 border-l border-border bg-card shadow-xl flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-2 flex-1 overflow-hidden">
-          {breadcrumbs.map((crumb, index) => (
-            <div key={crumb.id} className="flex items-center gap-2">
-              {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-              <span className="text-sm text-muted-foreground truncate">
-                {index === breadcrumbs.length - 1 ? (
-                  <span className="font-semibold text-foreground">{crumb.label}</span>
-                ) : (
-                  crumb.label
-                )}
-              </span>
-            </div>
-          ))}
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0">
+        <Input
+          value={editedLabel}
+          onChange={(e) => handleLabelChange(e.target.value)}
+          onBlur={handleLabelBlur}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            }
+          }}
+          className="text-xl font-semibold border-0 px-0 focus-visible:ring-0 flex-1"
+          placeholder="Node naam..."
+        />
+        <Button variant="ghost" size="icon" onClick={onClose} className="flex-shrink-0 ml-2">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Titel</Label>
-            <Input
-              value={editedLabel}
-              onChange={(e) => handleLabelChange(e.target.value)}
-              onBlur={handleLabelBlur}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.currentTarget.blur();
-                }
-              }}
-              className="text-xl font-semibold"
-              placeholder="Node naam..."
-            />
-            {node.details && (
-              <p className="text-muted-foreground text-sm mt-2">{node.details}</p>
-            )}
-          </div>
+          {node.details && (
+            <p className="text-muted-foreground text-sm">{node.details}</p>
+          )}
 
           <Card>
             <CardHeader className="pb-3">
