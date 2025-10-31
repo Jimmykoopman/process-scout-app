@@ -926,7 +926,7 @@ export const JourneyCanvas = () => {
   }, [currentWorkspaceId]);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true} open={true}>
       <div className="relative w-full h-screen flex">
         <AppSidebar 
           onMenuSelect={handleMenuSelect}
@@ -952,7 +952,6 @@ export const JourneyCanvas = () => {
         
         <div className="flex-1 flex flex-col">
           <div className="flex items-center gap-2 p-2 border-b border-border">
-            <SidebarTrigger />
             {selectedPage ? (
               editingTitle ? (
                 <Input
