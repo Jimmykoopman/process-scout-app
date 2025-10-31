@@ -21,6 +21,8 @@ import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, 
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
+import { PageManager } from '@/components/pages/PageManager';
+import { DocumentLibrary } from './DocumentLibrary';
 import { toast } from 'sonner';
 
 const nodeTypes = {
@@ -46,7 +48,7 @@ export const JourneyCanvas = () => {
   const [journeyData, setJourneyData] = useState(sampleJourneyData);
   
   // View management
-  const [currentView, setCurrentView] = useState<'journey' | 'database'>('journey');
+  const [currentView, setCurrentView] = useState<'journey' | 'database' | 'pages' | 'documenten'>('journey');
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -283,6 +285,15 @@ export const JourneyCanvas = () => {
     if (menuId === 'database') {
       setCurrentView('database');
       toast.info('Database weergave geopend');
+    } else if (menuId === 'pages') {
+      setCurrentView('pages');
+      toast.info("Pagina's weergave geopend");
+    } else if (menuId === 'documenten') {
+      setCurrentView('documenten');
+      toast.info('Documenten weergave geopend');
+    } else if (menuId === 'home') {
+      setCurrentView('journey');
+      toast.info('Journey weergave geopend');
     } else {
       setCurrentView('journey');
       toast.info(`Menu geselecteerd: ${menuId}`);
@@ -311,6 +322,10 @@ export const JourneyCanvas = () => {
           <div className="flex-1 relative flex">
             {currentView === 'database' ? (
               <DatabaseManager />
+            ) : currentView === 'pages' ? (
+              <PageManager />
+            ) : currentView === 'documenten' ? (
+              <DocumentLibrary documents={documents} onDocumentClick={handleDocumentClick} />
             ) : (
               <>
                 <div className="flex-1 relative">

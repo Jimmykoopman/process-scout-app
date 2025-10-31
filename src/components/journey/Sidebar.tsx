@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Settings, Home, Database, Upload, FolderOpen } from 'lucide-react';
+import { FileText, Settings, Home, Database, Upload, FolderOpen, FileEdit } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,7 @@ interface AppSidebarProps {
 
 const items = [
   { title: 'Home', icon: Home, id: 'home' },
+  { title: "Pagina's", icon: FileEdit, id: 'pages' },
   { title: 'Documenten', icon: FileText, id: 'documenten' },
   { title: 'Database', icon: Database, id: 'database' },
   { title: 'Upload', icon: Upload, id: 'upload' },
