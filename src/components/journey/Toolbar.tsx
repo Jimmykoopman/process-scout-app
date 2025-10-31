@@ -60,11 +60,6 @@ export const Toolbar = ({
           <Upload className="w-4 h-4" />
           Uploaden
         </Button>
-
-        <Button variant="outline" size="sm" className="gap-2" onClick={onFileUpload}>
-          <Image className="w-4 h-4" />
-          Foto's
-        </Button>
       </div>
     );
   }
@@ -121,10 +116,6 @@ export const Toolbar = ({
           <Button variant="outline" size="sm" className="gap-2" onClick={onFileUpload}>
             <Upload className="w-4 h-4" />
             Uploaden
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2" onClick={onFileUpload}>
-            <Image className="w-4 h-4" />
-            Foto's
           </Button>
         </div>
       </div>
