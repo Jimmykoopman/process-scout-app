@@ -176,6 +176,49 @@ export const JourneyCanvas = () => {
     [setEdges]
   );
 
+  const onNodeDragStop = useCallback(
+    (_event: any, node: Node) => {
+      // Find closest node within connection distance (150px)
+      const draggedNode = node;
+      const connectionDistance = 150;
+      
+      let closestNode: Node | null = null;
+      let minDistance = connectionDistance;
+
+      nodes.forEach((n) => {
+        if (n.id !== draggedNode.id) {
+          const distance = Math.sqrt(
+            Math.pow(n.position.x - draggedNode.position.x, 2) +
+            Math.pow(n.position.y - draggedNode.position.y, 2)
+          );
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestNode = n;
+          }
+        }
+      });
+
+      // Create edge if close enough to another node
+      if (closestNode) {
+        const newEdge: Edge = {
+          id: `e${draggedNode.id}-${closestNode.id}-${Date.now()}`,
+          source: draggedNode.id,
+          target: closestNode.id,
+          type: 'smoothstep',
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+          },
+          style: { stroke: '#0891B2', strokeWidth: 2 },
+        };
+        
+        setEdges((eds) => [...eds, newEdge]);
+        toast.success('Nodes verbonden');
+      }
+    },
+    [nodes, setEdges]
+  );
+
   const handleAddNode = useCallback(() => {
     const newNode: Node = {
       id: `node-${Date.now()}`,
@@ -438,6 +481,7 @@ export const JourneyCanvas = () => {
                             onNodesChange={onNodesChange}
                             onEdgesChange={onEdgesChange}
                             onConnect={onConnect}
+                            onNodeDragStop={onNodeDragStop}
                             nodeTypes={nodeTypes}
                             fitView
                             className="bg-canvas-bg"
