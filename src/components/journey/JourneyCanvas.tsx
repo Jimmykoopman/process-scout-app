@@ -17,7 +17,7 @@ import { DetailPanel } from './DetailPanel';
 import { Toolbar } from './Toolbar';
 import { AppSidebar } from './Sidebar';
 import { ExpandedNodeView } from './ExpandedNodeView';
-import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink } from '@/types/journey';
+import { JourneyNode, NodeShape, Workspace, Document, TextStyle, WorkspaceType, NodeLink, WorkspacePage, Page } from '@/types/journey';
 import { sampleJourneyData } from '@/data/sampleJourney';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DatabaseManager } from '@/components/database/DatabaseManager';
@@ -48,7 +48,9 @@ export const JourneyCanvas = () => {
   const [journeyData, setJourneyData] = useState(sampleJourneyData);
   
   // View management
-  const [currentView, setCurrentView] = useState<'journey' | 'database' | 'pages' | 'documenten'>('journey');
+  const [currentView, setCurrentView] = useState<'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page'>('journey');
+  const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
+  const [pages, setPages] = useState<Page[]>([]);
 
   // Convert journey data to React Flow nodes
   const createNodesFromData = useCallback(() => {
@@ -294,10 +296,29 @@ export const JourneyCanvas = () => {
     } else if (menuId === 'home') {
       setCurrentView('journey');
       toast.info('Journey weergave geopend');
+    } else if (menuId.startsWith('page-')) {
+      // Handle workspace page selection
+      setCurrentView('workspace-page');
+      const page = pages.find(p => p.id === menuId);
+      if (page) {
+        setSelectedPage({ 
+          id: page.id, 
+          title: page.title, 
+          workspaceId: currentWorkspaceId,
+          createdAt: page.createdAt,
+          updatedAt: page.updatedAt 
+        });
+      }
     } else {
       setCurrentView('journey');
       toast.info(`Menu geselecteerd: ${menuId}`);
     }
+  }, [currentWorkspaceId, pages]);
+
+  const handlePageUpdate = useCallback((pageId: string, blocks: any[]) => {
+    setPages(prev => prev.map(p => 
+      p.id === pageId ? { ...p, blocks, updatedAt: new Date().toISOString() } : p
+    ));
   }, []);
 
   return (
@@ -326,6 +347,10 @@ export const JourneyCanvas = () => {
               <PageManager />
             ) : currentView === 'documenten' ? (
               <DocumentLibrary documents={documents} onDocumentClick={handleDocumentClick} />
+            ) : currentView === 'workspace-page' && selectedPage ? (
+              <div className="flex-1 p-6 overflow-auto">
+                <PageManager />
+              </div>
             ) : (
               <>
                 <div className="flex-1 relative">

@@ -504,17 +504,36 @@ export function AppSidebar({
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddPageToWorkspace(workspace.id, templateTypes[0]);
-                            }}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[0])}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                Lege pagina
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[1])}>
+                                <Database className="h-4 w-4 mr-2" />
+                                Database
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[2])}>
+                                <FileEdit className="h-4 w-4 mr-2" />
+                                Formulier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAddPageToWorkspace(workspace.id, templateTypes[3])}>
+                                <PenTool className="h-4 w-4 mr-2" />
+                                Kladblok
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </SidebarMenuItem>
                     </div>
