@@ -30,6 +30,15 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
   const [selectedText, setSelectedText] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isInitialMount = useRef(true);
+
+  // Set initial content only once
+  useEffect(() => {
+    if (isInitialMount.current && editorRef.current && content) {
+      editorRef.current.innerHTML = content;
+      isInitialMount.current = false;
+    }
+  }, [content]);
 
   const handleFormat = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -173,6 +182,7 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
           <div
             ref={editorRef}
             contentEditable
+            suppressContentEditableWarning
             className="outline-none min-h-full text-foreground"
             onInput={() => {
               handleInput();
@@ -181,7 +191,6 @@ export const DocumentEditor = ({ content = '', onChange }: DocumentEditorProps) 
             onMouseUp={handleSelection}
             onKeyUp={handleSelection}
             onKeyDown={handleKeyDown}
-            dangerouslySetInnerHTML={{ __html: content }}
             style={{ 
               fontFamily: 'Arial, sans-serif',
               fontSize: '12pt',
