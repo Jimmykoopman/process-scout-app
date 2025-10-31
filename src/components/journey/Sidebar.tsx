@@ -437,58 +437,115 @@ export function AppSidebar({
                           <Collapsible
                             open={expandedWorkspaces[workspace.id]}
                             onOpenChange={() => toggleWorkspace(workspace.id)}
-                            className="flex-1"
+                            className="w-full"
                           >
-                            <div className="flex items-center w-full">
-                              <CollapsibleTrigger asChild>
+                            <div className="flex items-center w-full gap-1">
+                              <div className="flex items-center flex-1">
+                                <CollapsibleTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 shrink-0"
+                                  >
+                                    {expandedWorkspaces[workspace.id] ? (
+                                      <ChevronDown className="h-3 w-3" />
+                                    ) : (
+                                      <ChevronRight className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                </CollapsibleTrigger>
+                                {renamingItem?.type === 'workspace' && renamingItem.id === workspace.id ? (
+                                  <div className="flex items-center gap-1 flex-1">
+                                    <Input
+                                      value={renameValue}
+                                      onChange={(e) => setRenameValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSaveRename();
+                                        if (e.key === 'Escape') handleCancelRename();
+                                      }}
+                                      className="h-7 text-sm"
+                                      autoFocus
+                                    />
+                                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
+                                      <Check className="h-3 w-3" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <SidebarMenuButton
+                                    onClick={() => {
+                                      onWorkspaceChange(workspace.id);
+                                      handleMenuClick('workspace-' + workspace.id);
+                                    }}
+                                    isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
+                                    className={`flex-1 ${
+                                      currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id 
+                                        ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
+                                        : ''
+                                    }`}
+                                  >
+                                    <Home className="h-4 w-4" />
+                                    <span>{workspace.name}</span>
+                                  </SidebarMenuButton>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <MoreHorizontal className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-64 bg-popover z-50">
+                                    <DropdownMenuItem onClick={() => handleAddToFavorites(workspace.id)}>
+                                      <Star className="h-4 w-4 mr-2" />
+                                      Toevoegen aan Favorieten
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleStartRename('workspace', workspace.id, workspace.name)}>
+                                      <FileEdit className="h-4 w-4 mr-2" />
+                                      Naam wijzigen
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Users className="h-4 w-4 mr-2" />
+                                      Leden toevoegen
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <Link2 className="h-4 w-4 mr-2" />
+                                      Link kopiëren
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Copy className="h-4 w-4 mr-2" />
+                                      Teamruimte dupliceren
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => onDeleteWorkspace(workspace.id)}>
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Teamruimte verwijderen
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6 shrink-0"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
+                                  }}
                                 >
-                                  {expandedWorkspaces[workspace.id] ? (
-                                    <ChevronDown className="h-3 w-3" />
-                                  ) : (
-                                    <ChevronRight className="h-3 w-3" />
-                                  )}
+                                  <Plus className="h-3 w-3" />
                                 </Button>
-                              </CollapsibleTrigger>
-                              {renamingItem?.type === 'workspace' && renamingItem.id === workspace.id ? (
-                                <div className="flex items-center gap-1 flex-1">
-                                  <Input
-                                    value={renameValue}
-                                    onChange={(e) => setRenameValue(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleSaveRename();
-                                      if (e.key === 'Escape') handleCancelRename();
-                                    }}
-                                    className="h-7 text-sm"
-                                    autoFocus
-                                  />
-                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSaveRename}>
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancelRename}>
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              ) : (
-                              <SidebarMenuButton
-                                onClick={() => {
-                                  onWorkspaceChange(workspace.id);
-                                  handleMenuClick('workspace-' + workspace.id);
-                                }}
-                                isActive={currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id}
-                                className={`flex-1 ${
-                                  currentWorkspaceId === workspace.id && selectedView === 'workspace-' + workspace.id 
-                                    ? 'bg-sidebar-accent border-l-2 border-primary font-semibold' 
-                                    : ''
-                                }`}
-                              >
-                                <Home className="h-4 w-4" />
-                                <span>{workspace.name}</span>
-                              </SidebarMenuButton>
-                              )}
+                              </div>
                             </div>
 
                             <CollapsibleContent className="ml-4">
@@ -591,61 +648,6 @@ export function AppSidebar({
                               </SidebarMenuSub>
                             </CollapsibleContent>
                           </Collapsible>
-
-                          <div className="flex items-center gap-0.5">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <MoreHorizontal className="h-3 w-3" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-64 bg-popover z-50">
-                                <DropdownMenuItem onClick={() => handleAddToFavorites(workspace.id)}>
-                                  <Star className="h-4 w-4 mr-2" />
-                                  Toevoegen aan Favorieten
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleStartRename('workspace', workspace.id, workspace.name)}>
-                                  <FileEdit className="h-4 w-4 mr-2" />
-                                  Naam wijzigen
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Users className="h-4 w-4 mr-2" />
-                                  Leden toevoegen
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                  <Link2 className="h-4 w-4 mr-2" />
-                                  Link kopiëren
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Teamruimte dupliceren
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => onDeleteWorkspace(workspace.id)}>
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Teamruimte verwijderen
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onShowTemplateSelector({ type: 'workspace', workspaceId: workspace.id });
-                              }}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
                         </div>
                       </SidebarMenuItem>
                     </div>
