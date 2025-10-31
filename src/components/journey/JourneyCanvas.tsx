@@ -755,8 +755,12 @@ export const JourneyCanvas = () => {
     setPages(prev => [...prev, newPage]);
     setSelectedPage(newPage as any);
     setCurrentView('workspace-page');
+    
+    // Notify sidebar to select this page
+    handleMenuSelect(newPage.id, newPage as any);
+    
     toast.success(`${typeNames[pageType]} aangemaakt in Privé`);
-  }, []);
+  }, [handleMenuSelect]);
 
   const handleDeletePrivatePage = useCallback((pageId: string) => {
     setPages(prev => prev.filter(p => p.id !== pageId));
@@ -812,9 +816,13 @@ export const JourneyCanvas = () => {
       
       setSelectedPage(newPage);
       setCurrentView('workspace-page');
+      
+      // Notify sidebar to select this page
+      handleMenuSelect(newPage.id, newPage);
+      
       toast.success('Canvas aangemaakt in teamruimte');
     }
-  }, [handleAddPrivatePage]);
+  }, [handleAddPrivatePage, handleMenuSelect]);
 
   const handleTemplateSelected = useCallback((type: PageType) => {
     if (!templateSelectorTarget) return;
@@ -856,11 +864,15 @@ export const JourneyCanvas = () => {
       
       setSelectedPage(newPage);
       setCurrentView('workspace-page');
+      
+      // Notify sidebar to select this page
+      handleMenuSelect(newPage.id, newPage);
+      
       toast.success(`${typeNames[type]} aangemaakt in teamruimte`);
     }
     
     setTemplateSelectorTarget(null);
-  }, [templateSelectorTarget, handleAddPrivatePage, currentWorkspaceId]);
+  }, [templateSelectorTarget, handleAddPrivatePage, currentWorkspaceId, handleMenuSelect]);
 
   const handleCreatePageInWorkspace = useCallback((type: PageType) => {
     const typeNames = {
@@ -919,6 +931,7 @@ export const JourneyCanvas = () => {
           onDeletePrivatePage={handleDeletePrivatePage}
           onRenamePrivatePage={handleRenamePrivatePage}
           onShowTemplateSelector={handleShowTemplateSelector}
+          activePageId={selectedPage?.id}
         />
         
         <div className="flex-1 flex flex-col">

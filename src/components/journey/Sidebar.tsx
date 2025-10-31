@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle, Check, X } from 'lucide-react';
 import {
   Sidebar,
@@ -49,6 +49,7 @@ interface AppSidebarProps {
   onDeletePrivatePage: (pageId: string) => void;
   onRenamePrivatePage: (pageId: string, newTitle: string) => void;
   onShowTemplateSelector: (target: { type: 'private' } | { type: 'workspace', workspaceId: string }) => void;
+  activePageId?: string;
 }
 
 const mainItems = [
@@ -81,7 +82,8 @@ export function AppSidebar({
   onAddPrivatePage,
   onDeletePrivatePage,
   onRenamePrivatePage,
-  onShowTemplateSelector
+  onShowTemplateSelector,
+  activePageId
 }: AppSidebarProps) {
   const [selectedView, setSelectedView] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,6 +94,29 @@ export function AppSidebar({
   });
   const [renamingItem, setRenamingItem] = useState<{ type: 'workspace' | 'page' | 'private', id: string, workspaceId?: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
+
+  // Auto-open sections and expand workspaces when activePageId changes
+  useEffect(() => {
+    if (!activePageId) return;
+    
+    // Check if it's a private page
+    const isPrivatePage = privatePages.some(p => p.id === activePageId);
+    if (isPrivatePage) {
+      setOpenSections(prev => ({ ...prev, private: true }));
+      setSelectedView(activePageId);
+      return;
+    }
+    
+    // Check if it's a workspace page
+    Object.entries(workspacePages).forEach(([workspaceId, pages]) => {
+      const isWorkspacePage = pages.some(p => p.id === activePageId);
+      if (isWorkspacePage) {
+        setOpenSections(prev => ({ ...prev, teams: true }));
+        setExpandedWorkspaces(prev => ({ ...prev, [workspaceId]: true }));
+        setSelectedView(activePageId);
+      }
+    });
+  }, [activePageId, privatePages, workspacePages]);
 
   const handleMenuClick = (id: string) => {
     setSelectedView(id);
