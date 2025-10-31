@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -36,7 +36,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
   // Convert JourneyData to ReactFlow nodes and edges
-  const convertToReactFlow = useCallback((journeyData: JourneyData) => {
+  const convertToReactFlow = useCallback((journeyData: JourneyData, nodeClickHandler?: (node: JourneyNode) => void) => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     
@@ -51,8 +51,8 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
           shape: node.shape,
           color: node.color,
           textStyle: node.textStyle,
-          onClick: () => handleNodeClick(node),
-          onAddNodeDirection: handleAddNodeFromDirection,
+          onClick: nodeClickHandler ? () => nodeClickHandler(node) : undefined,
+          onAddNodeDirection: undefined, // Will be set later via useEffect
         },
       });
 
@@ -80,12 +80,12 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     return { nodes, edges };
   }, []);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(convertToReactFlow(data).nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(convertToReactFlow(data).edges);
-
   const handleNodeClick = useCallback((node: JourneyNode) => {
     setExpandedNode(node);
   }, []);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(convertToReactFlow(data, handleNodeClick).nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(convertToReactFlow(data, handleNodeClick).edges);
 
   const handleAddNode = useCallback(() => {
     const newNode: JourneyNode = {
@@ -204,6 +204,19 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
+
+  // Update nodes with callback functions after they're defined
+  React.useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onAddNodeDirection: handleAddNodeFromDirection,
+        },
+      }))
+    );
+  }, [handleAddNodeFromDirection, setNodes]);
 
   return (
     <div ref={reactFlowWrapper} className="flex-1 relative">
