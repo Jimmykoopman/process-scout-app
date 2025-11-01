@@ -336,7 +336,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         minZoom={0.1}
         maxZoom={2}
         panOnScroll
-        panOnDrag
+        panOnDrag={false}
         selectionOnDrag={false}
         translateExtent={[
           [-canvasSize.width / 2, -canvasSize.height / 2],

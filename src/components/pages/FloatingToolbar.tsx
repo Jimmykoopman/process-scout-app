@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
@@ -12,9 +12,8 @@ import {
   Bold,
   Italic,
   Pencil,
-  GripVertical,
-  Pin,
-  PinOff
+  MoveHorizontal,
+  MoveVertical
 } from 'lucide-react';
 import { NodeShape } from '@/types/journey';
 import { cn } from '@/lib/utils';
@@ -25,52 +24,10 @@ interface FloatingToolbarProps {
   onAddNode: () => void;
 }
 
-type Position = 'bottom' | 'left' | 'top' | 'right' | 'floating';
+type Position = 'bottom' | 'left' | 'top' | 'right';
 
 export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: FloatingToolbarProps) => {
-  const [position, setPosition] = useState<Position>('floating');
-  const [isDragging, setIsDragging] = useState(false);
-  const [coords, setCoords] = useState({ x: 20, y: 20 });
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (position === 'floating') {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - coords.x, y: e.clientY - coords.y });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && position === 'floating') {
-      setCoords({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart]);
-
-  const togglePin = () => {
-    if (position === 'floating') {
-      setPosition('bottom');
-    } else {
-      setPosition('floating');
-    }
-  };
+  const [position, setPosition] = useState<Position>('bottom');
 
   const cyclePosition = () => {
     const positions: Position[] = ['bottom', 'left', 'top', 'right'];
@@ -100,38 +57,21 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
     <div
       className={cn(
         'absolute z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-2',
-        position === 'floating' ? 'cursor-move' : '',
         getPositionStyles()
       )}
-      style={position === 'floating' ? {
-        left: `${coords.x}px`,
-        top: `${coords.y}px`,
-      } : undefined}
-      onMouseDown={handleMouseDown}
     >
-      {/* Drag handle - only visible when floating */}
-      {position === 'floating' && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 cursor-move"
-        >
-          <GripVertical className="h-4 w-4" />
-        </Button>
-      )}
-
-      {/* Pin/Unpin button */}
+      {/* Position cycle button */}
       <Button
         variant="ghost"
         size="sm"
         className="h-8 w-8 p-0"
-        onClick={position === 'floating' ? togglePin : cyclePosition}
-        title={position === 'floating' ? 'Vastpinnen' : 'Positie wijzigen'}
+        onClick={cyclePosition}
+        title="Positie wijzigen"
       >
-        {position === 'floating' ? (
-          <PinOff className="h-4 w-4" />
+        {isVertical ? (
+          <MoveVertical className="h-4 w-4" />
         ) : (
-          <Pin className="h-4 w-4" />
+          <MoveHorizontal className="h-4 w-4" />
         )}
       </Button>
 
