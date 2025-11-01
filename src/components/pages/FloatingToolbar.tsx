@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
@@ -12,8 +12,7 @@ import {
   Bold,
   Italic,
   Pencil,
-  MoveHorizontal,
-  MoveVertical
+  GripVertical
 } from 'lucide-react';
 import { NodeShape } from '@/types/journey';
 import { cn } from '@/lib/utils';
@@ -28,13 +27,62 @@ type Position = 'bottom' | 'left' | 'top' | 'right';
 
 export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: FloatingToolbarProps) => {
   const [position, setPosition] = useState<Position>('bottom');
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
-  const cyclePosition = () => {
-    const positions: Position[] = ['bottom', 'left', 'top', 'right'];
-    const currentIndex = positions.indexOf(position);
-    const nextIndex = (currentIndex + 1) % positions.length;
-    setPosition(positions[nextIndex]);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (toolbarRef.current) {
+      const rect = toolbarRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
   };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Calculate distances to each edge
+    const distToLeft = x;
+    const distToRight = windowWidth - x;
+    const distToTop = y;
+    const distToBottom = windowHeight - y;
+
+    // Find the closest edge
+    const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
+    
+    let newPosition: Position;
+    if (minDist === distToLeft) newPosition = 'left';
+    else if (minDist === distToRight) newPosition = 'right';
+    else if (minDist === distToTop) newPosition = 'top';
+    else newPosition = 'bottom';
+
+    setPosition(newPosition);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
 
   const getPositionStyles = () => {
     switch (position) {
@@ -55,25 +103,20 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
 
   return (
     <div
+      ref={toolbarRef}
       className={cn(
-        'absolute z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-2',
+        'absolute z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-2 transition-all duration-200',
+        isDragging ? 'cursor-grabbing opacity-80' : 'cursor-grab',
         getPositionStyles()
       )}
+      onMouseDown={handleMouseDown}
     >
-      {/* Position cycle button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={cyclePosition}
-        title="Positie wijzigen"
+      {/* Drag handle */}
+      <div 
+        className="flex items-center justify-center h-8 w-8 cursor-grab active:cursor-grabbing"
       >
-        {isVertical ? (
-          <MoveVertical className="h-4 w-4" />
-        ) : (
-          <MoveHorizontal className="h-4 w-4" />
-        )}
-      </Button>
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </div>
 
       <div className={cn('h-px w-full bg-border', isVertical ? 'my-1' : 'mx-1', isVertical ? 'w-full h-px' : 'h-full w-px')} />
 
@@ -82,7 +125,11 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
         variant="default"
         size="sm"
         className="h-8 gap-2"
-        onClick={onAddNode}
+        onClick={(e) => {
+          e.stopPropagation();
+          onAddNode();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
         title="Node toevoegen"
       >
         <Plus className="h-4 w-4" />
@@ -97,7 +144,11 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant={selectedShape === 'circle' ? 'default' : 'outline'}
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => onShapeChange('circle')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onShapeChange('circle');
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Cirkel"
         >
           <Circle className="h-4 w-4" />
@@ -106,7 +157,11 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant={selectedShape === 'square' ? 'default' : 'outline'}
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => onShapeChange('square')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onShapeChange('square');
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Vierkant"
         >
           <Square className="h-4 w-4" />
@@ -115,7 +170,11 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant={selectedShape === 'diamond' ? 'default' : 'outline'}
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => onShapeChange('diamond')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onShapeChange('diamond');
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Diamant"
         >
           <Diamond className="h-4 w-4" />
@@ -124,7 +183,11 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant={selectedShape === 'rectangle' ? 'default' : 'outline'}
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => onShapeChange('rectangle')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onShapeChange('rectangle');
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Rechthoek"
         >
           <Minus className="h-4 w-4 rotate-90" />
@@ -139,6 +202,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Lettergrootte"
         >
           <Type className="h-4 w-4" />
@@ -147,6 +211,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Dikgedrukt"
         >
           <Bold className="h-4 w-4" />
@@ -155,6 +220,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Schuin"
         >
           <Italic className="h-4 w-4" />
@@ -169,6 +235,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Upload"
         >
           <Upload className="h-4 w-4" />
@@ -177,6 +244,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Link toevoegen"
         >
           <LinkIcon className="h-4 w-4" />
@@ -185,6 +253,7 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
+          onMouseDown={(e) => e.stopPropagation()}
           title="Tekenen"
         >
           <Pencil className="h-4 w-4" />

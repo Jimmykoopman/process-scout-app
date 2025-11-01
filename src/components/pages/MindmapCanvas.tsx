@@ -335,9 +335,13 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         }}
         minZoom={0.1}
         maxZoom={2}
-        panOnScroll
+        panOnScroll={false}
         panOnDrag={false}
         selectionOnDrag={false}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
+        preventScrolling={true}
         translateExtent={[
           [-canvasSize.width / 2, -canvasSize.height / 2],
           [canvasSize.width, canvasSize.height]
