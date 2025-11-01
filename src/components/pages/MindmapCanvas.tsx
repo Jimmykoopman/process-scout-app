@@ -32,6 +32,7 @@ interface MindmapCanvasProps {
 export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
   const [selectedShape, setSelectedShape] = useState<NodeShape>('circle');
   const [expandedNode, setExpandedNode] = useState<JourneyNode | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 5000, height: 5000 }); // 500x500 grid units (10px per unit)
@@ -148,10 +149,13 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         break;
     }
 
+    // Use the same shape as the source node
+    const sourceShape = sourceNode.data.shape || 'circle';
+
     const newNode: JourneyNode = {
       id: `node-${Date.now()}`,
       label: 'Nieuwe node',
-      shape: 'circle',
+      shape: sourceShape,
       color: '#0891B2',
       textStyle: { fontSize: 16, fontWeight: 'normal', fontStyle: 'normal' },
     };
@@ -208,6 +212,48 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     [setEdges]
   );
 
+  // Handle node selection
+  const handleNodeSelect = useCallback((nodeId: string | null) => {
+    setSelectedNodeId(nodeId);
+    if (nodeId) {
+      const selectedNode = nodes.find(n => n.id === nodeId);
+      if (selectedNode) {
+        setSelectedShape(selectedNode.data.shape);
+      }
+    }
+  }, [nodes]);
+
+  // Handle shape change for selected node
+  const handleShapeChangeForSelected = useCallback((newShape: NodeShape) => {
+    setSelectedShape(newShape);
+    
+    if (selectedNodeId) {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === selectedNodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  shape: newShape,
+                },
+              }
+            : node
+        )
+      );
+
+      // Update journey data
+      const updatedStages = data.stages.map(stage => {
+        if (stage.id === selectedNodeId) {
+          return { ...stage, shape: newShape };
+        }
+        return stage;
+      });
+      onChange({ stages: updatedStages });
+      toast.success('Vorm aangepast');
+    }
+  }, [selectedNodeId, data, onChange, setNodes]);
+
   // Update nodes with callback functions after they're defined
   React.useEffect(() => {
     setNodes((nds) =>
@@ -216,10 +262,11 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         data: {
           ...node.data,
           onAddNodeDirection: handleAddNodeFromDirection,
+          isSelected: node.id === selectedNodeId,
         },
       }))
     );
-  }, [handleAddNodeFromDirection, setNodes]);
+  }, [handleAddNodeFromDirection, selectedNodeId, setNodes]);
 
   // Fit view only on initial load
   React.useEffect(() => {
@@ -270,7 +317,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     <div ref={reactFlowWrapper} className="flex-1 relative">
       <FloatingToolbar
         selectedShape={selectedShape}
-        onShapeChange={setSelectedShape}
+        onShapeChange={selectedNodeId ? handleShapeChangeForSelected : setSelectedShape}
         onAddNode={handleAddNode}
       />
       
@@ -282,6 +329,10 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         onInit={setReactFlowInstance}
+        onSelectionChange={(selection) => {
+          const selectedNodes = selection.nodes;
+          handleNodeSelect(selectedNodes.length > 0 ? selectedNodes[0].id : null);
+        }}
         minZoom={0.1}
         maxZoom={2}
         panOnScroll
