@@ -106,14 +106,15 @@ export const FloatingToolbar = ({ selectedShape, onShapeChange, onAddNode }: Flo
       ref={toolbarRef}
       className={cn(
         'absolute z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-2 transition-all duration-200',
-        isDragging ? 'cursor-grabbing opacity-80' : 'cursor-grab',
+        isDragging ? 'cursor-grabbing opacity-80' : 'cursor-auto',
         getPositionStyles()
       )}
-      onMouseDown={handleMouseDown}
     >
       {/* Drag handle */}
       <div 
         className="flex items-center justify-center h-8 w-8 cursor-grab active:cursor-grabbing"
+        onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e as any); }}
+        title="Versleep menu"
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>

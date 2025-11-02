@@ -19,7 +19,7 @@ import { JourneyData, JourneyNode, NodeShape, TextStyle } from '@/types/journey'
 import { FloatingToolbar } from './FloatingToolbar';
 import { ExpandedNodeView } from '@/components/journey/ExpandedNodeView';
 import { toast } from 'sonner';
-import CanvasPanDots from './CanvasPanDots';
+
 
 const nodeTypes = {
   custom: CustomNode,
@@ -336,13 +336,13 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         }}
         minZoom={0.1}
         maxZoom={2}
-        panOnScroll={false}
-        panOnDrag={false}
+        panOnScroll={true}
+        panOnDrag={true}
         selectionOnDrag={false}
         nodesDraggable={false}
         zoomOnScroll={false}
-        zoomOnPinch={false}
-        zoomOnDoubleClick={false}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={true}
         preventScrolling={true}
         translateExtent={[
           [-canvasSize.width / 2, -canvasSize.height / 2],
@@ -356,7 +356,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
           style={{ width: canvasSize.width, height: canvasSize.height }}
         />
         <Controls />
-        <CanvasPanDots />
+        
         <MiniMap pannable={false} zoomable={false} />
       </ReactFlow>
 
