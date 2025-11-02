@@ -19,6 +19,7 @@ import { JourneyData, JourneyNode, NodeShape, TextStyle } from '@/types/journey'
 import { FloatingToolbar } from './FloatingToolbar';
 import { ExpandedNodeView } from '@/components/journey/ExpandedNodeView';
 import { toast } from 'sonner';
+import CanvasPanDots from './CanvasPanDots';
 
 const nodeTypes = {
   custom: CustomNode,
@@ -354,6 +355,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
           style={{ width: canvasSize.width, height: canvasSize.height }}
         />
         <Controls />
+        <CanvasPanDots />
         <MiniMap />
       </ReactFlow>
 
