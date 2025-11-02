@@ -161,10 +161,7 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
               <div
                 key={block.id}
                 className="group relative flex items-start gap-2"
-                draggable
-                onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
               >
                 {/* Controls: Grip, Plus, Trash */}
                 <div className="flex-shrink-0 flex items-center gap-1 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -172,7 +169,11 @@ export const PageEditor = ({ page, onPageChange }: PageEditorProps) => {
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0 cursor-grab"
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnd={handleDragEnd}
                     onMouseDown={(e) => e.preventDefault()}
+                    title="Versleepen"
                   >
                     <GripVertical className="h-4 w-4" />
                   </Button>
