@@ -339,6 +339,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         panOnScroll={false}
         panOnDrag={false}
         selectionOnDrag={false}
+        nodesDraggable={false}
         zoomOnScroll={false}
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
@@ -356,7 +357,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         />
         <Controls />
         <CanvasPanDots />
-        <MiniMap />
+        <MiniMap pannable={false} zoomable={false} />
       </ReactFlow>
 
       {/* Expanded node view */}
