@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle, Check, X } from 'lucide-react';
+import { FileText, Home, Database, Upload, FolderOpen, FileEdit, ChevronDown, ChevronRight, Search, Star, Users, PenTool, CheckSquare, FileSpreadsheet, MoreHorizontal, Plus, Link2, Copy, Trash2, ExternalLink, Circle, Check, X, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { WorkspaceManager } from './WorkspaceManager';
+import { TeamSpaceManager } from '../teams/TeamSpaceManager';
 import { DocumentLibrary } from './DocumentLibrary';
 import { Workspace, Document, WorkspacePage, PageType, Page } from '@/types/journey';
 import { Input } from '@/components/ui/input';
@@ -89,6 +90,7 @@ export function AppSidebar({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({});
   const [expandedPages, setExpandedPages] = useState<Record<string, boolean>>({});
+  const [currentTeamId, setCurrentTeamId] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState({
     private: true,
     teams: true,
@@ -589,6 +591,11 @@ export function AppSidebar({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
+                <TeamSpaceManager 
+                  currentTeamId={currentTeamId}
+                  onTeamChange={setCurrentTeamId}
+                />
+                <SidebarSeparator className="my-2" />
                 <SidebarMenu>
                   {workspaces.map((workspace) => (
                     <div key={workspace.id}>
