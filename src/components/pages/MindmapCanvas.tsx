@@ -339,7 +339,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         panOnScroll={true}
         panOnDrag={true}
         selectionOnDrag={false}
-        nodesDraggable={false}
+        nodesDraggable={true}
         zoomOnScroll={false}
         zoomOnPinch={true}
         zoomOnDoubleClick={true}
