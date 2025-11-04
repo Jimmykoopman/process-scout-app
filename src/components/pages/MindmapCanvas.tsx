@@ -110,6 +110,12 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
       stages: [...data.stages, newNode]
     });
 
+    // Determine size based on shape
+    const isSquareShape = selectedShape === 'circle' || selectedShape === 'square' || selectedShape === 'diamond';
+    const nodeStyle = isSquareShape 
+      ? { width: 120, height: 120 }
+      : { width: 120, height: 60 };
+
     // Add to React Flow with random position
     const newFlowNode: Node = {
       id: newNode.id,
@@ -118,10 +124,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         x: Math.random() * 500 + 100, 
         y: Math.random() * 500 + 100 
       },
-      style: {
-        width: 120,
-        height: 60,
-      },
+      style: nodeStyle,
       data: {
         label: newNode.label,
         shape: newNode.shape,
@@ -174,15 +177,18 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
       stages: [...data.stages, newNode]
     });
 
+    // Determine size based on shape
+    const isSquareShape = sourceShape === 'circle' || sourceShape === 'square' || sourceShape === 'diamond';
+    const nodeStyle = isSquareShape 
+      ? { width: 120, height: 120 }
+      : { width: 120, height: 60 };
+
     // Add to React Flow
     const newFlowNode: Node = {
       id: newNode.id,
       type: 'custom',
       position: newPosition,
-      style: {
-        width: 120,
-        height: 60,
-      },
+      style: nodeStyle,
       data: {
         label: newNode.label,
         shape: newNode.shape,
