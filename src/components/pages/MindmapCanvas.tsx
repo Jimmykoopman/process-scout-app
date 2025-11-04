@@ -51,6 +51,10 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         id: nodeId,
         type: 'custom',
         position: { x: level * 250, y: index * 150 },
+        style: {
+          width: 120,
+          height: 60,
+        },
         data: { 
           label: node.label,
           shape: node.shape,
@@ -114,6 +118,10 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         x: Math.random() * 500 + 100, 
         y: Math.random() * 500 + 100 
       },
+      style: {
+        width: 120,
+        height: 60,
+      },
       data: {
         label: newNode.label,
         shape: newNode.shape,
@@ -171,6 +179,10 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
       id: newNode.id,
       type: 'custom',
       position: newPosition,
+      style: {
+        width: 120,
+        height: 60,
+      },
       data: {
         label: newNode.label,
         shape: newNode.shape,

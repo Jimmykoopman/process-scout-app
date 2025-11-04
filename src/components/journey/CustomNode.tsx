@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
+import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
 import { NodeShape, TextStyle } from '@/types/journey';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -55,6 +55,13 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
 
   return (
     <div className="relative group" onClick={onClick} onDoubleClick={onDoubleClick}>
+      <NodeResizer 
+        minWidth={80} 
+        minHeight={40}
+        isVisible={selected}
+        lineClassName="!border-primary !border-2"
+        handleClassName="!w-3 !h-3 !bg-primary"
+      />
       <Handle id="t-top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
       <Handle id="t-bottom" type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
       <Handle id="t-left" type="target" position={Position.Left} className="w-3 h-3 !left-0 opacity-0" />
