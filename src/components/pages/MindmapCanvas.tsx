@@ -126,17 +126,20 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     });
     onChange({ stages: updatedStages });
 
-    // Update expanded node state
-    if (expandedNode && expandedNode.id === nodeId) {
-      setExpandedNode({
-        ...expandedNode,
-        label: updates.label ?? expandedNode.label,
-        details: updates.description ?? expandedNode.details,
-      });
-    }
+    // Update expanded node state only if this is the currently expanded node
+    setExpandedNode(prev => {
+      if (prev && prev.id === nodeId) {
+        return {
+          ...prev,
+          label: updates.label ?? prev.label,
+          details: updates.description ?? prev.details,
+        };
+      }
+      return prev;
+    });
 
     toast.success('Node bijgewerkt');
-  }, [data, onChange, setNodes, expandedNode]);
+  }, [data, onChange, setNodes]);
 
   const handleAddNode = useCallback(() => {
     const newNode: JourneyNode = {

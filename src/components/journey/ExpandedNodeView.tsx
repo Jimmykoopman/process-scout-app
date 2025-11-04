@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, FileText, Plus, Bold, Link as LinkIcon, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { JourneyNode } from '@/types/journey';
@@ -32,6 +32,14 @@ export const ExpandedNodeView = ({ node, open, onClose, onUpdate }: ExpandedNode
   const [isCreating, setIsCreating] = useState(false);
   const [nodeTitle, setNodeTitle] = useState(node?.label || 'Nieuwe node');
   const [nodeDescription, setNodeDescription] = useState('');
+
+  // Reset local state when node changes
+  useEffect(() => {
+    if (node) {
+      setNodeTitle(node.label || 'Nieuwe node');
+      setNodeDescription(node.details || '');
+    }
+  }, [node?.id]); // Only depend on node id to avoid infinite loops
 
   if (!node || !open) return null;
 
