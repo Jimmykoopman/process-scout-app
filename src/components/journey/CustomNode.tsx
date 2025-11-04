@@ -19,13 +19,13 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
 
   const getShapeClasses = () => {
     const borderWidth = selected ? 'border-4' : 'border-2';
-    const base = `flex items-center justify-center min-w-[120px] min-h-[60px] max-w-[200px] px-4 py-3 bg-node-bg ${borderWidth} border-node-border shadow-lg cursor-pointer transition-all hover:shadow-xl text-sm font-medium text-foreground`;
+    const base = `flex items-center justify-center w-full h-full px-4 py-3 bg-node-bg ${borderWidth} border-node-border shadow-lg cursor-pointer transition-all hover:shadow-xl text-sm font-medium text-foreground`;
     
     switch (shape) {
       case 'circle':
-        return `${base} rounded-full aspect-square`;
+        return `${base} rounded-full`;
       case 'square':
-        return `${base} rounded-lg aspect-square`;
+        return `${base} rounded-lg`;
       case 'diamond':
         return `${base} rotate-45`;
       case 'rectangle':
@@ -54,13 +54,15 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
   };
 
   return (
-    <div className="relative group" onClick={onClick} onDoubleClick={onDoubleClick}>
+    <div className="relative group w-full h-full" onClick={onClick} onDoubleClick={onDoubleClick}>
       <NodeResizer 
         minWidth={80} 
         minHeight={40}
         isVisible={selected}
         lineClassName="!border-transparent"
         handleClassName="!w-2 !h-2 !bg-primary !rounded-full !border-2 !border-background"
+        keepAspectRatio={shape === 'circle' || shape === 'square'}
+        shouldResize={() => true}
       />
       <Handle id="t-top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
       <Handle id="t-bottom" type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
@@ -107,8 +109,6 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
           boxShadow: selected 
             ? `0 0 0 4px ${color || '#0891B2'}40, 0 4px 20px ${color || '#0891B2'}60` 
             : (color ? `0 4px 20px ${color}40` : undefined),
-          width: '100%',
-          height: '100%',
         }}
       >
         <span className={labelClasses} style={labelStyle}>{label}</span>
