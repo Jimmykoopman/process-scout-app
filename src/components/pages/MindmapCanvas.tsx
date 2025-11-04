@@ -360,14 +360,12 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         <MiniMap pannable={false} zoomable={false} />
       </ReactFlow>
 
-      {/* Expanded node view */}
-      {expandedNode && (
-        <ExpandedNodeView
-          node={expandedNode}
-          open={!!expandedNode}
-          onClose={() => setExpandedNode(null)}
-        />
-      )}
+      {/* Expanded node view - now positioned fixed on right */}
+      <ExpandedNodeView
+        node={expandedNode}
+        open={!!expandedNode}
+        onClose={() => setExpandedNode(null)}
+      />
     </div>
   );
 };
