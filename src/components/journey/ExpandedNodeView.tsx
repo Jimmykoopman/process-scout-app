@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, FileText, Plus } from 'lucide-react';
+import { X, FileText, Plus, Bold, Link as LinkIcon, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { JourneyNode } from '@/types/journey';
 import { DocumentEditor } from '@/components/pages/DocumentEditor';
@@ -7,6 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 interface Document {
@@ -27,6 +29,8 @@ export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps)
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [newDocTitle, setNewDocTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [nodeTitle, setNodeTitle] = useState(node?.label || 'Nieuwe node');
+  const [nodeDescription, setNodeDescription] = useState('');
 
   if (!node || !open) return null;
 
@@ -97,10 +101,68 @@ export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps)
   return (
     <div className="fixed right-0 top-0 w-[400px] h-full bg-background border-l border-border shadow-xl flex flex-col overflow-hidden z-50">
       <div className="flex items-center justify-between p-4 border-b border-border bg-card">
-        <h2 className="text-xl font-semibold">{node.label}</h2>
+        <div className="flex-1 mr-2">
+          <Input
+            value={nodeTitle}
+            onChange={(e) => setNodeTitle(e.target.value)}
+            className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0"
+            placeholder="Nieuwe node"
+          />
+        </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
+      </div>
+
+      <div className="p-4 border-b border-border space-y-3">
+        <Textarea
+          value={nodeDescription}
+          onChange={(e) => setNodeDescription(e.target.value)}
+          placeholder="Beschrijving toevoegen..."
+          className="min-h-[60px] resize-none"
+        />
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => toast.info('Bold functie komt binnenkort')}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => toast.info('Link functie komt binnenkort')}
+          >
+            <LinkIcon className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => toast.info('Bestandsupload komt binnenkort')}>
+                <FileUp className="mr-2 h-4 w-4" />
+                Bestand uploaden
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info('Google Docs integratie komt binnenkort')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Google Docs
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info('Google Spreadsheets integratie komt binnenkort')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Google Spreadsheets
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info('Google Drive integratie komt binnenkort')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Google Drive
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="p-4 border-b border-border">
