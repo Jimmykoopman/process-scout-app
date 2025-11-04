@@ -59,8 +59,8 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
         minWidth={80} 
         minHeight={40}
         isVisible={selected}
-        lineClassName="!border-primary !border-2"
-        handleClassName="!w-3 !h-3 !bg-primary"
+        lineClassName="!border-transparent"
+        handleClassName="!w-2 !h-2 !bg-primary !rounded-full !border-2 !border-background"
       />
       <Handle id="t-top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
       <Handle id="t-bottom" type="target" position={Position.Bottom} className="w-3 h-3 !bottom-0 opacity-0" />
