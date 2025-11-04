@@ -22,9 +22,10 @@ interface ExpandedNodeViewProps {
   node: JourneyNode | null;
   open: boolean;
   onClose: () => void;
+  onUpdate?: (nodeId: string, updates: { label?: string; description?: string }) => void;
 }
 
-export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps) => {
+export const ExpandedNodeView = ({ node, open, onClose, onUpdate }: ExpandedNodeViewProps) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [newDocTitle, setNewDocTitle] = useState('');
@@ -105,6 +106,11 @@ export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps)
           <Input
             value={nodeTitle}
             onChange={(e) => setNodeTitle(e.target.value)}
+            onBlur={() => {
+              if (node && onUpdate && nodeTitle !== node.label) {
+                onUpdate(node.id, { label: nodeTitle });
+              }
+            }}
             className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0"
             placeholder="Nieuwe node"
           />
@@ -118,6 +124,11 @@ export const ExpandedNodeView = ({ node, open, onClose }: ExpandedNodeViewProps)
         <Textarea
           value={nodeDescription}
           onChange={(e) => setNodeDescription(e.target.value)}
+          onBlur={() => {
+            if (node && onUpdate) {
+              onUpdate(node.id, { description: nodeDescription });
+            }
+          }}
           placeholder="Beschrijving toevoegen..."
           className="min-h-[60px] resize-none"
         />

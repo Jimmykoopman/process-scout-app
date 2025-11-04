@@ -96,6 +96,48 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(convertToReactFlow(data, handleNodeClick).nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(convertToReactFlow(data, handleNodeClick).edges);
 
+  const handleNodeUpdate = useCallback((nodeId: string, updates: { label?: string; description?: string }) => {
+    // Update React Flow nodes
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              label: updates.label ?? node.data.label,
+            },
+          };
+        }
+        return node;
+      })
+    );
+
+    // Update journey data
+    const updatedStages = data.stages.map(stage => {
+      if (stage.id === nodeId) {
+        return { 
+          ...stage, 
+          label: updates.label ?? stage.label,
+          details: updates.description ?? stage.details,
+        };
+      }
+      return stage;
+    });
+    onChange({ stages: updatedStages });
+
+    // Update expanded node state
+    if (expandedNode && expandedNode.id === nodeId) {
+      setExpandedNode({
+        ...expandedNode,
+        label: updates.label ?? expandedNode.label,
+        details: updates.description ?? expandedNode.details,
+      });
+    }
+
+    toast.success('Node bijgewerkt');
+  }, [data, onChange, setNodes, expandedNode]);
+
   const handleAddNode = useCallback(() => {
     const newNode: JourneyNode = {
       id: `node-${Date.now()}`,
@@ -392,6 +434,7 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
         node={expandedNode}
         open={!!expandedNode}
         onClose={() => setExpandedNode(null)}
+        onUpdate={handleNodeUpdate}
       />
     </div>
   );
