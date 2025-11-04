@@ -242,17 +242,26 @@ export const MindmapCanvas = ({ data, onChange }: MindmapCanvasProps) => {
     
     if (selectedNodeId) {
       setNodes((nds) =>
-        nds.map((node) =>
-          node.id === selectedNodeId
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  shape: newShape,
-                },
-              }
-            : node
-        )
+        nds.map((node) => {
+          if (node.id === selectedNodeId) {
+            // Reset to default size when changing to rectangle
+            const newStyle = newShape === 'rectangle' 
+              ? { width: 120, height: 60 }
+              : (newShape === 'circle' || newShape === 'square' || newShape === 'diamond')
+              ? { width: node.style?.width || 120, height: node.style?.width || 120 } // Make square
+              : node.style;
+            
+            return {
+              ...node,
+              style: newStyle,
+              data: {
+                ...node.data,
+                shape: newShape,
+              },
+            };
+          }
+          return node;
+        })
       );
 
       // Update journey data

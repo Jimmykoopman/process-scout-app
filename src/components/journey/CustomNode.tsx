@@ -61,7 +61,7 @@ const CustomNode = memo(({ data, id, selected }: NodeProps<CustomNodeData>) => {
         isVisible={selected}
         lineClassName="!border-transparent"
         handleClassName="!w-2 !h-2 !bg-primary !rounded-full !border-2 !border-background"
-        keepAspectRatio={shape === 'circle' || shape === 'square'}
+        keepAspectRatio={shape === 'circle' || shape === 'square' || shape === 'diamond'}
         shouldResize={() => true}
       />
       <Handle id="t-top" type="target" position={Position.Top} className="w-3 h-3 !top-0 opacity-0" />
