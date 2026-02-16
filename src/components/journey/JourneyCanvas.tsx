@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import ReactFlow, {
   Background,
   Controls,
@@ -38,25 +39,25 @@ export const JourneyCanvas = () => {
   const [selectedShape, setSelectedShape] = useState<NodeShape>('circle');
   const [expandedNode, setExpandedNode] = useState<JourneyNode | null>(null);
   
-  // Workspace management
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([
+  // Workspace management - persisted to localStorage
+  const [workspaces, setWorkspaces] = useLocalStorage<Workspace[]>('app-workspaces', [
     { id: 'default', name: 'Klant Reis', type: 'mindmap', data: { stages: [] } }
   ]);
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState('default');
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useLocalStorage('app-current-workspace', 'default');
   
   // Document management
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useLocalStorage<Document[]>('app-documents', []);
   
-  // Journey nodes with text styles and links - per page
-  const [pageData, setPageData] = useState<Record<string, any>>({
+  // Journey nodes with text styles and links - per page - persisted
+  const [pageData, setPageData] = useLocalStorage<Record<string, any>>('app-page-data', {
     'default': { stages: [] }
   });
   
   // View management
   const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page' | 'template-selector'>('home');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
-  const [pages, setPages] = useState<Page[]>([]);
-  const [workspacePages, setWorkspacePages] = useState<Record<string, WorkspacePage[]>>({});
+  const [pages, setPages] = useLocalStorage<Page[]>('app-pages', []);
+  const [workspacePages, setWorkspacePages] = useLocalStorage<Record<string, WorkspacePage[]>>('app-workspace-pages', {});
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [templateSelectorTarget, setTemplateSelectorTarget] = useState<{ type: 'private' } | { type: 'workspace', workspaceId: string } | null>(null);
