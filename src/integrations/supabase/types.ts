@@ -100,6 +100,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_app_data: {
+        Row: {
+          created_at: string
+          documents: Json
+          id: string
+          page_data: Json
+          pages: Json
+          updated_at: string
+          user_id: string
+          workspace_pages: Json
+          workspaces: Json
+        }
+        Insert: {
+          created_at?: string
+          documents?: Json
+          id?: string
+          page_data?: Json
+          pages?: Json
+          updated_at?: string
+          user_id: string
+          workspace_pages?: Json
+          workspaces?: Json
+        }
+        Update: {
+          created_at?: string
+          documents?: Json
+          id?: string
+          page_data?: Json
+          pages?: Json
+          updated_at?: string
+          user_id?: string
+          workspace_pages?: Json
+          workspaces?: Json
+        }
+        Relationships: []
+      }
       workspace_permissions: {
         Row: {
           created_at: string | null
