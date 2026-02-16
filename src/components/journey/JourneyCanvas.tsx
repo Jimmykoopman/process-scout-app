@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Session } from '@supabase/supabase-js';
+import { useUserData } from '@/hooks/useUserData';
 import ReactFlow, {
   Background,
   Controls,
@@ -33,31 +34,56 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
-export const JourneyCanvas = () => {
+interface JourneyCanvasProps {
+  session: Session;
+}
+
+export const JourneyCanvas = ({ session }: JourneyCanvasProps) => {
+  const { data: userData, updateData, loading: dataLoading } = useUserData(session.user.id);
+  
   const [selectedNode, setSelectedNode] = useState<JourneyNode | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<JourneyNode[]>([]);
   const [selectedShape, setSelectedShape] = useState<NodeShape>('circle');
   const [expandedNode, setExpandedNode] = useState<JourneyNode | null>(null);
   
-  // Workspace management - persisted to localStorage
-  const [workspaces, setWorkspaces] = useLocalStorage<Workspace[]>('app-workspaces', [
-    { id: 'default', name: 'Klant Reis', type: 'mindmap', data: { stages: [] } }
-  ]);
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useLocalStorage('app-current-workspace', 'default');
+  // Derived state from userData
+  const workspaces = userData.workspaces;
+  const documents = userData.documents;
+  const pageData = userData.pageData;
+  const pages = userData.pages;
+  const workspacePages = userData.workspacePages;
   
-  // Document management
-  const [documents, setDocuments] = useLocalStorage<Document[]>('app-documents', []);
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState('default');
   
-  // Journey nodes with text styles and links - per page - persisted
-  const [pageData, setPageData] = useLocalStorage<Record<string, any>>('app-page-data', {
-    'default': { stages: [] }
-  });
+  // Setters that save to DB
+  const setWorkspaces = useCallback((updater: Workspace[] | ((prev: Workspace[]) => Workspace[])) => {
+    const next = typeof updater === 'function' ? updater(userData.workspaces) : updater;
+    updateData({ workspaces: next });
+  }, [userData.workspaces, updateData]);
+
+  const setDocuments = useCallback((updater: Document[] | ((prev: Document[]) => Document[])) => {
+    const next = typeof updater === 'function' ? updater(userData.documents) : updater;
+    updateData({ documents: next });
+  }, [userData.documents, updateData]);
+
+  const setPageData = useCallback((updater: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)) => {
+    const next = typeof updater === 'function' ? updater(userData.pageData) : updater;
+    updateData({ pageData: next });
+  }, [userData.pageData, updateData]);
+
+  const setPages = useCallback((updater: Page[] | ((prev: Page[]) => Page[])) => {
+    const next = typeof updater === 'function' ? updater(userData.pages) : updater;
+    updateData({ pages: next });
+  }, [userData.pages, updateData]);
+
+  const setWorkspacePages = useCallback((updater: Record<string, WorkspacePage[]> | ((prev: Record<string, WorkspacePage[]>) => Record<string, WorkspacePage[]>)) => {
+    const next = typeof updater === 'function' ? updater(userData.workspacePages) : updater;
+    updateData({ workspacePages: next });
+  }, [userData.workspacePages, updateData]);
   
   // View management
   const [currentView, setCurrentView] = useState<'home' | 'inbox' | 'journey' | 'database' | 'pages' | 'documenten' | 'workspace-page' | 'template-selector'>('home');
   const [selectedPage, setSelectedPage] = useState<WorkspacePage | null>(null);
-  const [pages, setPages] = useLocalStorage<Page[]>('app-pages', []);
-  const [workspacePages, setWorkspacePages] = useLocalStorage<Record<string, WorkspacePage[]>>('app-workspace-pages', {});
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [templateSelectorTarget, setTemplateSelectorTarget] = useState<{ type: 'private' } | { type: 'workspace', workspaceId: string } | null>(null);
@@ -1047,6 +1073,13 @@ export const JourneyCanvas = () => {
     setCurrentView('workspace-page');
     toast.success(`${typeNames[type]} aangemaakt`);
   }, [currentWorkspaceId]);
+  if (dataLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Data laden...</div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={true} open={true}>
